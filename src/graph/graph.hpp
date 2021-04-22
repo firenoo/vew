@@ -5,7 +5,7 @@
 	#include <string>
 #endif
 /*
- * Author: Firenoo
+ * Author: firenoo
  * File created on 2021/04/21
  */
 namespace firenoo {
@@ -21,7 +21,7 @@ namespace firenoo {
  *                Default uses std::unordered_map<V, VertexObj>
  */
 template<
-	class V, 
+	class V = std::string, 
 	class Vertex = GraphVertex<V>, 
 	class Storage = std::unordered_map<V, Vertex>>
 class Graph {
@@ -152,5 +152,6 @@ public:
 	
 
 };
+
 
 }
