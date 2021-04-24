@@ -15,22 +15,34 @@ namespace firenoo {
  *                                   Graph
  * ----------------------------------------------------------------------------
  * Representation of a directed, weighted graph. Multiedges are allowed.
- * Template parameters:
- * -- V         : type of the graph, used as an identifier. 
- *                Default uses std::string.
- * -- VertexObj : type used to represent a vertex. 
- *                Default uses firenoo::GraphVertex<V>.
- * -- Storage   : type used to store the vertices. 
- *                Default uses std::unordered_map<V, VertexObj>
  */
-template<
-	class V = std::string, 
-	class Vertex = GraphVertex<V>, 
-	class Storage = std::unordered_map<V, Vertex*>>
 class Graph {
 private:
-	Storage vertices;
-	unsigned int edgeCount;
+	std::unordered_map<std::string, GraphVertex*> vertices;
+	unsigned int _edgeCount;
+
+	/*
+	 * Adds the specified vertex to the graph. If the object already
+	 * exists, this method does nothing and returns false.
+	 * Parameters:
+	 * -- (GraphVertex&) v : vertex object to add to the graph.
+	 * Returns:
+	 * -- true if and only if the vertex was added to the graph.
+	 * WRITE operation.
+	 */
+	bool addVertex(const GraphVertex* v);
+
+	/*
+	 * Removes the specified vertex from the graph. Does nothing if the vertex
+	 * was not in the graph.
+	 * Parameters:
+	 * -- (GraphVertex&) v : vertex object to remove from the graph
+	 * Returns:
+	 * -- a pointer to the vertex that was removed, or nullptr if no vertex was
+	 *    removed
+	 * WRITE operation.
+	 */
+	GraphVertex* removeVertex(const GraphVertex* v);
 public:
 	/*
 	 * Default constructor. Creates an empty graph with no vertices or edges.
@@ -69,7 +81,7 @@ public:
 	 * Returns:
 	 * -- true if and only if the vertex object exists in this graph
 	 */
-	bool hasVertex(const V& v) const;
+	bool hasVertex(const std::string& v) const;
 
 // WRITE operations -----------------------------------------------------------
 
@@ -77,60 +89,62 @@ public:
 	 * Adds the specified object as a vertex to the graph. If the object already
 	 * exists, this method does nothing and returns false.
 	 * Parameters:
-	 * -- (V&) v : vertex value to be wrapped by a Vertex object.
+	 * -- (std::string&) id : name of the vertex.
 	 * Returns:
-	 * -- true if and only if the object was added to the graph.
+	 * -- a pointer to the vertex if it was created, or nullptr if operation
+	 *    failed.
 	 * WRITE operation.
 	 */
-	bool addVertex(constV& v);
+	GraphVertex* addVertex(const std::string& id);
 
-	/*
-	 * Adds the specified vertex to the graph. If the object already
-	 * exists, this method does nothing and returns false.
-	 * Parameters:
-	 * -- (Vertex&) v : vertex object to add to the graph.
-	 * Returns:
-	 * -- true if and only if the vertex was added to the graph.
-	 * WRITE operation.
-	 */
-	bool addVertex(const Vertex& v);
+
 
 	/*
 	 * Adds a directed edge between the two specified vertices, if they exist.
-	 * Use force=true to add the vertices if they don't before.
 	 * Parameters:
-	 * -- (V&) v1      : vertex 1, the source vertex value
-	 * -- (V&) v2      : vertex 2, the destination vertex value
-	 * -- (bool) force : If true, attempts to add v1 and v2 to the graph 
-	 *                   before adding the edge.
+	 * -- (std::string&) v1      : source vertex id
+	 * -- (std::string&) v2      : sink vertex id
+	 * -- (std::string&) id      : edge id
+	 * -- (double) w             : edge weight
+	 * 
 	 * Returns:
 	 * -- true if and only if the edge was successfully added.
 	 * -- false if the edge could not be added because of 1 of the following:
-	 *    -> v1 and/or v2 don't exist in the graph and force=false
-	 *    -> v1 and/or v2 don't exist, force=true, but could not add v1 and/or
-	 *       v2 to the graph.
+	 *    -> v1 and/or v2 don't exist in the graph
 	 */
-	bool addEdge(const V& v1, const V& v2, bool force);
+	bool addEdge(const std::string& v1, const std::string& v2, const std::string& id, double w);
 
 	/*
-	 * Removes the specified vertex value from the graph.
+	 * Removes the specified vertex from the graph. Does nothing if the vertex
+	 * was not in the graph.
 	 * Parameters:
-	 * -- (V&) v - vertex value to remove from the graph.
+	 * -- (std::string&) id : id of the vertex to remove from the graph.
 	 * Returns:
-	 * -- the vertex object that was removed.
+	 * -- a pointer to the vertex that was removed, or nullptr if no vertex was
+	 *    removed
 	 * WRITE operation.
 	 */
-	V& removeVertex(const V& v);
+	GraphVertex* removeVertex(const std::string& id);
+
+
 
 	/*
-	 * Removes the specified vertex from the graph.
+	 * Removes the specified edge from the graph.
 	 * Parameters:
-	 * -- (Vertex&) v - vertex object to remove from the graph.
-	 * Returns:
-	 * -- the vertex object that was removed.
-	 * WRITE operation.
+	 * -- (GraphVertex&) v1 : source vertex id
+	 * -- (GraphVertex&) v2 : sink vertex id
+	 * -- (std::string) id  : edge id
 	 */
-	V& removeVertex(const Vertex& v);
+	void removeEdge(const std::string& v1, const std::string& v2, const std::string& id);
+
+	/*
+	 * Removes the specified edge from the graph.
+	 * Parameters:
+	 * -- (GraphVertex&) v1 : source vertex
+	 * -- (GraphVertex&) v2 : sink vertex
+	 * --
+	 */
+	void removeEdge(const GraphVertex* v1, const GraphVertex* v2, const std::string& id);
 
 };
 
@@ -142,17 +156,16 @@ public:
  * Template parameters:
  * -- V : vertex type.
  */
-template<class V>
-class GraphVertex {
-private:
-	V obj;
-	std::unordered_map<V, std::pair<GraphVertex*, double>> edges;
-	
+class GraphVertex {	
 protected:
 	unsigned int indegree;
+	std::string name;
+	std::unordered_map<std::string, std::pair<GraphVertex*, double>> edges;
+
+	ConstEdgeIterator begin();
 
 public:
-	GraphVertex(V& obj);
+	GraphVertex(const std::string& obj);
 
 	/*
 	 * Gets the value associated to this vertex.
@@ -161,7 +174,7 @@ public:
 	 * Returns:
 	 * -- a const reference to the value.
 	 */
-	const V& get() const;
+	std::string& get() const;
 
 	/*
 	 * Gets the outdegree of this vertex.
@@ -189,6 +202,26 @@ public:
 	 */
 	bool isNeighboring(const GraphVertex* other) const;
 
+	/*
+	 * Adds an edge to the current graph.
+	 * Parameters:
+	 * -- (GraphVertex*) other : the vertex the edge will point to
+	 * -- (std::string&) id    : the edge identifier
+	 * -- (double) weight      : edge weight
+	 * Returns:
+	 * -- true if and only if an edge was successfully added.
+	 */
+	bool addEdge(const GraphVertex* other, const std::string& id, double weight);
+	
+};
+
+class ConstEdgeIterator {
+private:
+	GraphVertex v;
+
+public:
+
+	ConstEdgeIterator();
 
 };
 
