@@ -126,8 +126,6 @@ public:
 	 */
 	GraphVertex* removeVertex(const std::string& id);
 
-
-
 	/*
 	 * Removes the specified edge from the graph.
 	 * Parameters:
@@ -142,9 +140,21 @@ public:
 	 * Parameters:
 	 * -- (GraphVertex&) v1 : source vertex
 	 * -- (GraphVertex&) v2 : sink vertex
-	 * --
+	 * -- (std::string&) id : edge id
 	 */
 	void removeEdge(const GraphVertex* v1, const GraphVertex* v2, const std::string& id);
+
+	/*
+	 * Removes all neighbors of the specified vertex from the graph. 
+	 * WRITE operation.
+	 */
+	void removeAllNeighbors(const std::string& v);
+
+	/*
+	 * Removes all vertices and edges from the graph.
+	 * WRITE operation. 
+	 */
+	void clear();
 
 };
 
@@ -161,9 +171,6 @@ protected:
 	unsigned int indegree;
 	std::string name;
 	std::unordered_map<std::string, std::pair<GraphVertex*, double>> edges;
-
-	ConstEdgeIterator begin();
-
 public:
 	GraphVertex(const std::string& obj);
 
@@ -213,15 +220,15 @@ public:
 	 */
 	bool addEdge(const GraphVertex* other, const std::string& id, double weight);
 	
-};
-
-class ConstEdgeIterator {
-private:
-	GraphVertex v;
-
-public:
-
-	ConstEdgeIterator();
+	/*
+	 * Removes the specified edge.
+	 * Parameters:
+	 * -- (GraphVertex*) other : the other vertex that the edge points to
+	 * -- (std::string&) id    : the edge identifier
+	 * Returns:
+	 * -- true if and only if an edge was successfully removed.
+	 */
+	bool removeEdge(const GraphVertex* other, const std::string& id);
 
 };
 
