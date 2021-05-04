@@ -14,7 +14,7 @@ firenoo::Graph::~Graph() {
 
 
 unsigned int firenoo::Graph::vertexCount() const {
-	return vertices.size();
+	return _vertices.size();
 }
 
 
@@ -23,3 +23,4 @@ unsigned int firenoo::Graph::edgeCount() const {
 }
 
 //WRITE operations ------------------------------------------------------------
+

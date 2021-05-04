@@ -1,9 +1,9 @@
-#ifndef GRAPH
-    #define GRAPH 0
-	#pragma once
+#ifndef _FN_GRAPH
+    #define FN_GRAPH 0
 	#include <unordered_map>
 	#include <string>
-#endif
+	#include "graph_vertex.hpp"
+
 /*
  * Author: firenoo
  * File created on 2021/04/21
@@ -18,7 +18,7 @@ namespace firenoo {
  */
 class Graph {
 private:
-	std::unordered_map<std::string, GraphVertex*> vertices;
+	std::unordered_map<std::string, GraphVertex*> _vertices;
 	unsigned int _edgeCount;
 
 	/*
@@ -95,7 +95,7 @@ public:
 	 *    failed.
 	 * WRITE operation.
 	 */
-	GraphVertex* addVertex(const std::string& id);
+	GraphVertex* addVertex(std::string id);
 
 
 
@@ -112,7 +112,7 @@ public:
 	 * -- false if the edge could not be added because of 1 of the following:
 	 *    -> v1 and/or v2 don't exist in the graph
 	 */
-	bool addEdge(const std::string& v1, const std::string& v2, const std::string& id, double w);
+	bool addEdge(const std::string& v1, const std::string& v2, std::string id, double w);
 
 	/*
 	 * Removes the specified vertex from the graph. Does nothing if the vertex
@@ -158,78 +158,7 @@ public:
 
 };
 
-/*
- * ----------------------------------------------------------------------------
- *                                GraphVertex
- * ----------------------------------------------------------------------------
- * Representation of a graph vertex.
- * Template parameters:
- * -- V : vertex type.
- */
-class GraphVertex {	
-protected:
-	unsigned int indegree;
-	std::string name;
-	std::unordered_map<std::string, std::pair<GraphVertex*, double>> edges;
-public:
-	GraphVertex(const std::string& obj);
-
-	/*
-	 * Gets the value associated to this vertex.
-	 * Parameters:
-	 * -- None
-	 * Returns:
-	 * -- a const reference to the value.
-	 */
-	std::string& get() const;
-
-	/*
-	 * Gets the outdegree of this vertex.
-	 * Returns:
-	 * -- an unsigned int equal to the outdegree of this vertex.
-	 * READ operation.
-	 */
-	unsigned int outdegree() const;
-
-	/*
-	 * Gets the indegree of this vertex.
-	 * Returns:
-	 * -- an unsigned int equal to the indegree of this vertex.
-	 * READ operation.
-	 */
-	unsigned int indegree() const;
-
-	/*
-	 * Determines whether an edge exists from this vertex to the specified
-	 * vertex.
-	 * Parameters:
-	 * -- (GraphVertex*) other : the vertex to check
-	 * Returns:
-	 * -- true if and only if ## other ## is a direct neighbor of this vertex
-	 */
-	bool isNeighboring(const GraphVertex* other) const;
-
-	/*
-	 * Adds an edge to the current graph.
-	 * Parameters:
-	 * -- (GraphVertex*) other : the vertex the edge will point to
-	 * -- (std::string&) id    : the edge identifier
-	 * -- (double) weight      : edge weight
-	 * Returns:
-	 * -- true if and only if an edge was successfully added.
-	 */
-	bool addEdge(const GraphVertex* other, const std::string& id, double weight);
-	
-	/*
-	 * Removes the specified edge.
-	 * Parameters:
-	 * -- (GraphVertex*) other : the other vertex that the edge points to
-	 * -- (std::string&) id    : the edge identifier
-	 * Returns:
-	 * -- true if and only if an edge was successfully removed.
-	 */
-	bool removeEdge(const GraphVertex* other, const std::string& id);
-
-};
 
 }
+
+#endif

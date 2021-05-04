@@ -17,6 +17,30 @@ protected:
 	size_t _indegree;
 	std::string _name;
 	std::unordered_map<GraphVertex*, std::pair<std::string, double>> _edges;
+
+	/*
+	 * Gets all edge ids associated with the specified vertex.
+	 * Parameters:
+	 * -- (GraphVertex*) other : Vertex to check. 
+	 * Returns:
+	 * -- an const array pointer to a list of edge ids, with no ordering. All
+	 *    edge ids are edges from this vertex to the other.
+	 * READ operation.
+	 */
+	const std::string* const getEdgeIds(const GraphVertex* other) const;
+
+	/*
+	 * Checks whether this vertex has an edge to the other vertex with the
+	 * specified id.
+	 * Parameters:
+	 * -- (GraphVertex*) other : Vertex to check.
+	 * -- (std::string&) id    : ID to check.
+	 * Returns:
+	 * -- True if and only if there is an edge to the other vertex with the
+	 * 	  specified id.
+	 */
+	bool hasEdge(const GraphVertex* other, const std::string& id) const;
+
 public:
 	GraphVertex(const std::string obj);
 
@@ -65,14 +89,14 @@ public:
 	 * Adds an edge to the current graph.
 	 * Parameters:
 	 * -- (GraphVertex*) other : the vertex the edge will point to
-	 * -- (std::string) id     : the edge identifier. Fails if the id
+	 * -- (std::string&) id    : the edge identifier. Fails if the id
 	 * 						     already exists in the edge list.
 	 * -- (double) weight      : edge weight
 	 * Returns:
 	 * -- true if and only if an edge was successfully added.
 	 * WRITE operation.
 	 */
-	bool addEdge(const GraphVertex* other, const std::string id, double weight);
+	bool addEdge(GraphVertex* other, const std::string& id, double weight);
 	
 	/*
 	 * Removes the specified edge.
@@ -83,7 +107,7 @@ public:
 	 * -- true if and only if an edge was successfully removed.
 	 * WRITE operation.
 	 */
-	bool removeEdge(const GraphVertex* other, const std::string& id);
+	bool removeEdge(GraphVertex* other, const std::string& id);
 
 };
 
