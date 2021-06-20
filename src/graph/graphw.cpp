@@ -30,8 +30,8 @@ bool firenoo::GraphW<T>::hasVertex(const T& v) const {
 
 template<class T>
 bool firenoo::GraphW<T>::hasEdge(const T& v1, const T& v2) const {
-	auto v1 = _vertices.find(v1);
-	return v1 != _vertices.end() && v1->second.hasEdge(v2);
+	auto vertex = _vertices.find(v1);
+	return vertex != _vertices.end() && v1->second.hasEdge(v2);
 }
 
 //WRITE operations ------------------------------------------------------------
@@ -89,7 +89,7 @@ bool firenoo::GraphW<T>::removeEdge(const T& v1, const T& v2) {
 	auto src = _vertices.find(v1);
 	auto snk = _vertices.find(v2);
 	if(src != _vertices.end() && snk != _vertices.end()) {
-		return vertex->second.removeEdge(snk);
+		return src->second.removeEdge(snk);
 	}
 	return false;
 }
