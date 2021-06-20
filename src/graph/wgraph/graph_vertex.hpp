@@ -1,9 +1,6 @@
 #ifndef _FN_GRAPH_VERTEX
     #define _FN_GRAPH_VERTEX 0
 	#include <unordered_map>
-	#include <set>
-	#include <string>
-	#include <vector>
 namespace firenoo {
 /*
  * ----------------------------------------------------------------------------

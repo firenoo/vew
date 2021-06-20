@@ -82,12 +82,14 @@ public:
 
 	/*
 	 * Adds the specified object as a vertex to the graph. If the object already
-	 * exists, this method does nothing and returns false.
+	 * exists, this method returns the existing vertex.
+	 * Note about memory: A new graph vertex is allocated if this method
+	 * returns a non-null pointer.
 	 * Parameters:
 	 * -- (T&) id : name of the vertex.
 	 * Returns:
-	 * -- a pointer to the vertex if it was created, or nullptr if operation
-	 *    failed.
+	 * -- a pointer to the new vertex if it was created, or a pointer to the 
+	 *    existing vertex.
 	 * WRITE operation.
 	 */
 	GraphVertex<T>* addVertex(const T& id);
@@ -95,6 +97,7 @@ public:
 	/*
 	 * Adds the vertex to the graph. If the object already
 	 * exists, this method does nothing and returns false.
+	 * Note about memory: Nothing is allocated.
 	 * Parameters:
 	 * -- (GraphVertex*) id : name of the vertex.
 	 * Returns:
@@ -105,6 +108,7 @@ public:
 
 	/*
 	 * Adds a directed edge between the two specified vertices, if they exist.
+	 * 
 	 * Parameters:
 	 * -- (T&) v1      : source vertex id
 	 * -- (T&) v2      : sink vertex id
@@ -119,7 +123,9 @@ public:
 
 	/*
 	 * Removes the specified vertex from the graph. Does nothing if the vertex
-	 * was not in the graph.
+	 * was not in the graph. 
+	 * Note about memory: Nothing is freed. A responsible programmer must free
+	 * the pointer themself.
 	 * Parameters:
 	 * -- (T&) id : id of the vertex to remove from the graph.
 	 * Returns:
@@ -130,19 +136,21 @@ public:
 	GraphVertex<T>* removeVertex(const T& id);
 
 	/*
-	 * Removes the specified vertex from the graph. Does nothing if the vertex
-	 * was not in the graph.
+	 * Removes the specified vertex from the graph. 
+	 * Does nothing if the vertex was not in the graph. 
+	 * Note about memory: The pointer to the vertex is destroyed 
+	 * iff this method returns true.
 	 * Parameters:
 	 * -- (T&) id : id of the vertex to remove from the graph.
 	 * Returns:
-	 * -- a pointer to the vertex that was removed, or nullptr if no vertex was
-	 *    removed
+	 * -- True iff a vertex was deleted.
 	 * WRITE operation.
 	 */
 	bool removeVertex(const GraphVertex<T>* v);
 
 	/*
 	 * Removes the specified edge from the graph.
+	 * Note about memory: No memory is deallocated.
 	 * Parameters:
 	 * -- (T&) v1 : source vertex id
 	 * -- (T&) v2 : sink vertex id
@@ -152,23 +160,15 @@ public:
 	bool removeEdge(const T& v1, const T& v2);
 
 	/*
-	 * Removes the specified edge from the graph. 
-	 * Parameters:
-	 * -- (GraphVertex&) v1 : source vertex
-	 * -- (GraphVertex&) v2 : sink vertex
-	 * Returns:
-	 * -- True iff an edge was removed.
-	 */
-	bool removeEdge(const GraphVertex<T>* v1, const GraphVertex<T>* v2);
-
-	/*
-	 * Removes all neighbors of the specified vertex from the graph. 
+	 * Removes all edges from the specified vertex from the graph.
+	 * Note about memory: no memory is deallocated.
 	 * WRITE operation.
 	 */
 	void removeAllNeighbors(const T& v);
 
 	/*
 	 * Removes all vertices and edges from the graph.
+	 * Note about memory: All vertex pointers are deallocated via delete.
 	 * WRITE operation. 
 	 */
 	void clear();
