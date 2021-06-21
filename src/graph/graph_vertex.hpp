@@ -15,7 +15,7 @@ template<class T>
 class GraphVertex {	
 protected:
 	size_t _indegree;
-	T* _obj;
+	const T _obj;
 	std::unordered_map<GraphVertex<T>*, double> _neighbors;
 
 	/*
@@ -30,7 +30,7 @@ protected:
 	double getEdge(GraphVertex<T>* const& other) const;
 	
 public:
-	GraphVertex(const T& obj);
+	GraphVertex(const T&& obj);
 
 	~GraphVertex();
 	
@@ -42,7 +42,7 @@ public:
 	 * -- a const reference to the value.
 	 * READ operation.
 	 */
-	const T& get() const;
+	const T get() const;
 
 	/*
 	 * Gets the outdegree of this vertex.

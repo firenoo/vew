@@ -1,7 +1,7 @@
 #include "graph_vertex.hpp"
 
 template<class T>
-firenoo::GraphVertex<T>::GraphVertex(const T& obj) : _indegree(0), _obj(obj) {
+firenoo::GraphVertex<T>::GraphVertex(const T&& obj) : _indegree(0), _obj(obj) {
 	_neighbors = std::unordered_map<GraphVertex<T>*, double>();
 }
 
@@ -23,7 +23,7 @@ double firenoo::GraphVertex<T>::getEdge(GraphVertex<T>* const& other) const {
 
 //Public
 template<class T>
-const T& firenoo::GraphVertex<T>::get() const {
+const T firenoo::GraphVertex<T>::get() const {
 	return _obj;
 }
 
