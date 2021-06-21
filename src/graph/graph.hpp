@@ -20,28 +20,27 @@ namespace firenoo {
  * Any discrepency in behavior should be clearly documented.
  * 
  * Example: GraphU means that the graph implementation is unweighted, does not
- * multigraphs, and does not allow self-loops. In other words, it is a simple
- * unweighted graph.
+ * multigraphs, and does not allow self-loops. In other words, it is a simple,
+ * directed, unweighted graph.
  *  
  * The suffix order should respect the list below. 
  * 1. U / W - unweighted/weighted (must be one or the other)
+ * 4. B - undirected (edges are bidirectional, optional)
  * 2. M - multigraph (multiple edges to the same vertex, optional)
  * 3. L - self-loops (edges from a vertex to itself, optional)
  * 
- * Note that all graphs have the following property(s):
- * Directed - an undirected graph is represented as a directed graph with 
- *            all edges going both ways.
- * 
  * Template Args:
  * T - type of each vertex
- * D - type of edge weight (if unweighted, bool suffices; if multigraph,
- * some list structure suffices)
+ * W - type of weight.
  * V - type of vertex
  */
-template<class T, class D, class V>
+template<class T, class W, class V>
 class Graph {
 
 public:
+
+	virtual ~Graph() {};
+
 //READ operations
 
 	/*
@@ -169,7 +168,7 @@ public:
 	 * Returns:
 	 *  - true if and only if a vertex was added.
 	 */
-	virtual bool addVertex(const V* v) = 0;
+	virtual bool addVertex(V* v) = 0;
 
 	/*
 	 * Removes the specified vertex from the graph.
@@ -204,7 +203,7 @@ public:
 	 * Returns:
 	 *  - true if and only if the vertex was removed.
 	 */
-	virtual bool removeVertex(const V* v) = 0;
+	virtual bool removeVertex(V* v) = 0;
 
 	/*
 	 * Adds a directed edge between the two specified vertices.
@@ -221,7 +220,7 @@ public:
 	 *     1. an edge already exists between the vertices,
 	 *     2. one or both vertices don't exist in the graph.
 	 */
-	virtual bool addEdge(const T& v1, const T& v2, D w) = 0;
+	virtual bool addEdge(const T& v1, const T& v2, W w) = 0;
 
 	/*
 	 * Adds a directed edge between the two specified vertices.
@@ -238,7 +237,7 @@ public:
 	 *     1. an edge already exists between the vertices,
 	 *     2. one or both vertices don't exist in the graph.
 	 */
-	virtual bool addEdge(const T&& v1, const T& v2, D w) = 0;
+	virtual bool addEdge(const T&& v1, const T& v2, W w) = 0;
 
 	/*
 	 * Adds a directed edge between the two specified vertices.
@@ -255,7 +254,7 @@ public:
 	 *     1. an edge already exists between the vertices,
 	 *     2. one or both vertices don't exist in the graph.
 	 */
-	virtual bool addEdge(const T& v1, const T&& v2, D w) = 0;
+	virtual bool addEdge(const T& v1, const T&& v2, W w) = 0;
 
 	/*
 	 * Adds a directed edge between the two specified vertices.
@@ -272,7 +271,7 @@ public:
 	 *     1. an edge already exists between the vertices,
 	 *     2. one or both vertices don't exist in the graph.
 	 */
-	virtual bool addEdge(const T&& v1, const T&& v2, D w) = 0;
+	virtual bool addEdge(const T&& v1, const T&& v2, W w) = 0;
 
 	/*
 	 * Removes the specified edge from the graph.
@@ -328,7 +327,7 @@ public:
 	 * Parameters:
 	 *  - v : vertex 
 	 */
-	virtual bool removeNeighbors(const T& v);
+	virtual bool removeNeighbors(const T& v) = 0;
 
 	/*
 	 * The specified vertex has edges from it removed.
@@ -338,7 +337,7 @@ public:
 	 * Returns:
 	 *  - true
 	 */
-	virtual bool removeNeighbors(const T&& v);
+	virtual bool removeNeighbors(const T&& v) = 0;
 
 	/*
 	 * Removes all vertices and edges from the graph.

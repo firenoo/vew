@@ -1,7 +1,7 @@
 # use g++
 CXX = g++
 CXXFLAGS ?= -Wall -pedantic -g -O0
-TEST = out/tests/GraphTest
+TEST = out/tests/GraphTest.o
 RM ?= rm -f
 INC = -Isrc/graph
 DEST = out
@@ -12,10 +12,9 @@ LIBGRAPH = $(_LIBGRAPH:%=$(DEST)/graph/%)
 
 all: clean test
 
-test: $(TEST) libraph
-	out/tests/GraphTest
+test: $(TEST)
 
-out/tests/GraphTest: tests/GraphTest.cpp
+$(TEST): tests/GraphTest.cpp libgraph
 	$(CXX) -o $@ $(CXXFLAGS) $(INC) $< $(LIBGRAPH)
 
 
