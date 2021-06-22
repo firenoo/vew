@@ -1,5 +1,5 @@
 #ifndef _FN_GRAPH
-    #define FN_GRAPH 0
+    #define _FN_GRAPH 0
 
 /*
  * Author: firenoo
@@ -326,6 +326,8 @@ public:
 	 * WRITE operation.
 	 * Parameters:
 	 *  - v : vertex 
+	 * Returns:
+	 *  - true if and only if all edges were removed.
 	 */
 	virtual bool removeNeighbors(const T& v) = 0;
 
@@ -335,7 +337,7 @@ public:
 	 * Parameters:
 	 *  - v : vertex
 	 * Returns:
-	 *  - true
+	 *  - true if and only if all edges were removed.
 	 */
 	virtual bool removeNeighbors(const T&& v) = 0;
 

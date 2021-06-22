@@ -1,22 +1,19 @@
-#ifndef _FN_GRAPHW
-    #define _FN_GRAPHW 0
-	#include <unordered_map>
-	#include <string>
-	#include <functional>
-	#include "vertexw.hpp"
+#ifndef _FN_GRAPHWB
+    #define _FN_GRAPHWB 0
 	#include "graph.hpp"
-/*
- * Author: firenoo
- * File created on 2021/04/21
- */
-namespace firenoo {
+	#include "vertexwb.hpp"
 
+namespace firenoo {
 /*
  * ----------------------------------------------------------------------------
- * GraphW
+ * GraphWB
  * ----------------------------------------------------------------------------
- * Represents a weighted, directed graph. Weights are represented by doubles by
- * default.
+ * Represents a weighted, undirected graph. Weights are represented by doubles
+ * by default. The only difference between this class and GraphW is when
+ * modifying an edge (u, v), the edge (v, u) is also modified. That is, the
+ * following properties are guaranteed:
+ * - (u, v) in E  <=> (v, u) in E
+ * - w((u, v)) = w((v, u))
  * 
  * Template args:
  * T - type
@@ -25,21 +22,22 @@ namespace firenoo {
  * KeyEq - class that contains eq function, see std::equal_to
  */
 template<class T, class W = double, class Hash = std::hash<T>, class KeyEq = std::equal_to<T>>
-class GraphW : public Graph<T, W, GraphVertexW<T, W>> {
+class GraphWB : Graph<T, W, GraphVertexWB<T, W>> {
+
 private:
-	std::unordered_map<std::reference_wrapper<const T>, GraphVertexW<T, W>*, Hash, KeyEq> _vertices;
+	std::unordered_map<std::reference_wrapper<const T>, GraphVertexWB<T, W>*, Hash, KeyEq> _vertices;
 	size_t _edgeCount;
 
 public:
 	/*
 	 * Default constructor. Creates an empty graph with no vertices or edges.
 	 */
-	GraphW();
+	GraphWB();
 	
 	/*
 	 * Default destructor, must delete all vertices and edges.
 	 */
-	~GraphW();
+	~GraphWB();
 	
 // Read operations ------------------------------------------------------------
 
@@ -134,6 +132,62 @@ public:
 	 */
 	virtual bool hasEdge(const T&& v1, const T&& v2) const;
 
+	/*
+	 * Gets the edge weight between the two vertices. The weight is read into
+	 * `in`.
+	 *
+	 * READ operation.
+	 * Parameters:
+	 *  - v1 : source vertex
+	 *  - v2 : sink vertex
+	 *  - in : variable to read the weight into
+	 * Returns:
+	 *  - true if and only if the edge exists
+	 */
+	virtual bool getEdge(const T& v1, const T& v2, W& in) const;
+
+	/*
+	 * Gets the edge weight between the two vertices. The weight is read into
+	 * `in`.
+	 *
+	 * READ operation.
+	 * Parameters:
+	 *  - v1 : source vertex
+	 *  - v2 : sink vertex
+	 *  - in : variable to read the weight into
+	 * Returns:
+	 *  - true if and only if the edge exists
+	 */
+	virtual bool getEdge(const T&& v1, const T& v2, W& in) const;
+
+	/*
+	 * Gets the edge weight between the two vertices. The weight is read into
+	 * `in`.
+	 *
+	 * READ operation.
+	 * Parameters:
+	 *  - v1 : source vertex
+	 *  - v2 : sink vertex
+	 *  - in : variable to read the weight into
+	 * Returns:
+	 *  - true if and only if the edge exists
+	 */
+	virtual bool getEdge(const T& v1, const T&& v2, W& in) const;
+
+	/*
+	 * Gets the edge weight between the two vertices. The weight is read into
+	 * `in`.
+	 *
+	 * READ operation.
+	 * Parameters:
+	 *  - v1 : source vertex
+	 *  - v2 : sink vertex
+	 *  - in : variable to read the weight into
+	 * Returns:
+	 *  - true if and only if the edge exists
+	 */
+	virtual bool getEdge(const T&& v1, const T&& v2, W& in) const;
+
 // WRITE operations -----------------------------------------------------------
 
 	/*
@@ -148,7 +202,7 @@ public:
 	 *  - a pointer to the new vertex if it was created, or a pointer to the 
 	 *    existing vertex.
 	 */
-	virtual GraphVertexW<T, W>* addVertex(const T& id);
+	virtual GraphVertexWB<T, W>* addVertex(const T& id);
 
 	/*
 	 * Adds the vertex to the graph if it doesn't exist already.
@@ -162,7 +216,7 @@ public:
 	 *  - a pointer to the new vertex if it was created, or a pointer to the 
 	 *    existing vertex.
 	 */
-	virtual GraphVertexW<T, W>* addVertex(const T&& id);
+	virtual GraphVertexWB<T, W>* addVertex(const T&& id);
 
 	/*
 	 * Adds the vertex to the graph if it doesn't exist already.
@@ -175,7 +229,7 @@ public:
 	 * Returns:
 	 *  - true if and only if a vertex was added.
 	 */
-	virtual bool addVertex(GraphVertexW<T, W>* v);
+	virtual bool addVertex(GraphVertexWB<T, W>* v);
 
 	/*
 	 * Adds a directed edge between the two specified vertices.
@@ -266,7 +320,7 @@ public:
 	 *  - a pointer to the vertex that was removed, or nullptr if no vertex was
 	 *    removed
 	 */
-	virtual GraphVertexW<T, W>* removeVertex(const T& id);
+	virtual GraphVertexWB<T, W>* removeVertex(const T& id);
 
 	/*
 	 * Removes the specified vertex from the graph. Does nothing if the vertex
@@ -281,7 +335,7 @@ public:
 	 *  - a pointer to the vertex that was removed, or nullptr if no vertex was
 	 *    removed
 	 */
-	virtual GraphVertexW<T, W>* removeVertex(const T&& id);
+	virtual GraphVertexWB<T, W>* removeVertex(const T&& id);
 
 	/*
 	 * Removes the specified vertex from the graph. 
@@ -294,7 +348,7 @@ public:
 	 * Returns:
 	 *  - true if and only if the vertex was removed.
 	 */
-	virtual bool removeVertex(GraphVertexW<T, W>* v);
+	virtual bool removeVertex(GraphVertexWB<T, W>* v);
 
 	/*
 	 * Removes the specified edge from the graph.
@@ -379,154 +433,104 @@ public:
 	 */
 	virtual void clear();
 
-	/*
-	 * Gets the edge weight between the two vertices. The weight is read into
-	 * `in`.
-	 *
-	 * Parameters:
-	 *  - v1 : source vertex
-	 *  - v2 : sink vertex
-	 *  - in : variable to read the weight into
-	 * Returns:
-	 *  - true if and only if the edge exists
-	 */
-	virtual bool getEdge(const T& v1, const T& v2, W& in);
 
-	/*
-	 * Gets the edge weight between the two vertices. The weight is read into
-	 * `in`.
-	 *
-	 * Parameters:
-	 *  - v1 : source vertex
-	 *  - v2 : sink vertex
-	 *  - in : variable to read the weight into
-	 * Returns:
-	 *  - true if and only if the edge exists
-	 */
-	virtual bool getEdge(const T&& v1, const T& v2, W& in);
-
-	/*
-	 * Gets the edge weight between the two vertices. The weight is read into
-	 * `in`.
-	 *
-	 * Parameters:
-	 *  - v1 : source vertex
-	 *  - v2 : sink vertex
-	 *  - in : variable to read the weight into
-	 * Returns:
-	 *  - true if and only if the edge exists
-	 */
-	virtual bool getEdge(const T& v1, const T&& v2, W& in);
-
-	/*
-	 * Gets the edge weight between the two vertices. The weight is read into
-	 * `in`.
-	 *
-	 * Parameters:
-	 *  - v1 : source vertex
-	 *  - v2 : sink vertex
-	 *  - in : variable to read the weight into
-	 * Returns:
-	 *  - true if and only if the edge exists
-	 */
-	virtual bool getEdge(const T&& v1, const T&& v2, W& in);
 
 };
 
 template<class T, class W, class Hash, class KeyEq>
-firenoo::GraphW<T, W, Hash, KeyEq>::GraphW() : _edgeCount(0) {}
+firenoo::GraphWB<T, W, Hash, KeyEq>::GraphWB() : _edgeCount(0) {}
 
 template<class T, class W, class Hash, class KeyEq>
-firenoo::GraphW<T, W, Hash, KeyEq>::~GraphW() {
+firenoo::GraphWB<T, W, Hash, KeyEq>::~GraphWB() {
 	clear();
 }
 
 //READ operations -------------------------------------------------------------
 
 template<class T, class W, class Hash, class KeyEq>
-size_t firenoo::GraphW<T, W, Hash, KeyEq>::vertexCount() const {
+size_t firenoo::GraphWB<T, W, Hash, KeyEq>::vertexCount() const {
 	return _vertices.size();
 }
 
 
 template<class T, class W, class Hash, class KeyEq>
-size_t firenoo::GraphW<T, W, Hash, KeyEq>::edgeCount() const {
+size_t firenoo::GraphWB<T, W, Hash, KeyEq>::edgeCount() const {
 	return this->_edgeCount;
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::hasVertex(const T& v) const {
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::hasVertex(const T& v) const {
 	return _vertices.find(v) != _vertices.end();
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::hasVertex(const T&& v) const {
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::hasVertex(const T&& v) const {
 	return _vertices.find(v) != _vertices.end();
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::hasEdge(const T& v1, const T& v2) const {
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::hasEdge(const T& v1, const T& v2) const {
+	auto s1 = _vertices.find(v1);
+	auto s2 = _vertices.find(v2);
+	return s1 != _vertices.end() && 
+	       s2 != _vertices.end() && 
+		   s1->second->hasEdge(s2->second);
+}
+
+template<class T, class W, class Hash, class KeyEq>
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::hasEdge(const T&& v1, const T& v2) const {
+	auto s1 = _vertices.find(v1);
+	auto s2 = _vertices.find(v2);
+	return s1 != _vertices.end() && 
+	       s2 != _vertices.end() && 
+	       s1->second->hasEdge(s2->second);
+}
+
+template<class T, class W, class Hash, class KeyEq>
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::hasEdge(const T& v1, const T&& v2) const {
 	auto vertex1 = _vertices.find(v1);
 	auto vertex2 = _vertices.find(v2);
 	return vertex1 != _vertices.end() && vertex2 != _vertices.end() && vertex1->second->hasEdge(vertex2->second);
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::hasEdge(const T&& v1, const T& v2) const {
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::hasEdge(const T&& v1, const T&& v2) const {
 	auto vertex1 = _vertices.find(v1);
 	auto vertex2 = _vertices.find(v2);
 	return vertex1 != _vertices.end() && vertex2 != _vertices.end() && vertex1->second->hasEdge(vertex2->second);
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::hasEdge(const T& v1, const T&& v2) const {
-	auto vertex1 = _vertices.find(v1);
-	auto vertex2 = _vertices.find(v2);
-	return vertex1 != _vertices.end() && vertex2 != _vertices.end() && vertex1->second->hasEdge(vertex2->second);
-}
-
-template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::hasEdge(const T&& v1, const T&& v2) const {
-	auto vertex1 = _vertices.find(v1);
-	auto vertex2 = _vertices.find(v2);
-	return vertex1 != _vertices.end() && vertex2 != _vertices.end() && vertex1->second->hasEdge(vertex2->second);
-}
-
-template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::getEdge(const T& v1, const T& v2, W& in) {
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::getEdge(const T& v1, const T& v2, W& in) const {
 	if(hasEdge(v1, v2)) {
-		_vertices[v1]->getEdge(_vertices[v2], in);
+		_vertices.find(v1)->second->getEdge(_vertices.find(v2)->second, in);
 		return true;
 	}
 	return false;
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::getEdge(const T&& v1, const T& v2, W& in) {
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::getEdge(const T&& v1, const T& v2, W& in) const {
 	if(hasEdge(v1, v2)) {
-		_vertices[v1]->getEdge(_vertices[v2], in);
+		_vertices.find(v1)->second->getEdge(_vertices.find(v2)->second, in);
 		return true;
 	}
 	return false;
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::getEdge(const T& v1, const T&& v2, W& in) {
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::getEdge(const T& v1, const T&& v2, W& in) const {
 	if(hasEdge(v1, v2)) {
-		//Read into `in`
-		_vertices[v1]->getEdge(_vertices[v2], in);
+		_vertices.find(v1)->second->getEdge(_vertices.find(v2)->second, in);
 		return true;
 	}
 	return false;
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::getEdge(const T&& v1, const T&& v2, W& in) {
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::getEdge(const T&& v1, const T&& v2, W& in) const {
 	if(hasEdge(v1, v2)) {
-		//Read into `in`
-		GraphVertexW<T, W>* src = _vertices[v1];
-		GraphVertexW<T, W>* snk = _vertices[v2];
-		src->getEdge(snk, in);
+		_vertices.find(v1)->second->getEdge(_vertices.find(v2)->second, in);
 		return true;
 	}
 	return false;
@@ -535,10 +539,10 @@ bool firenoo::GraphW<T, W, Hash, KeyEq>::getEdge(const T&& v1, const T&& v2, W& 
 //WRITE operations ------------------------------------------------------------
 
 template<class T, class W, class Hash, class KeyEq>
-firenoo::GraphVertexW<T, W>* firenoo::GraphW<T, W, Hash, KeyEq>::addVertex(const T& v) {
+firenoo::GraphVertexWB<T, W>* firenoo::GraphWB<T, W, Hash, KeyEq>::addVertex(const T& v) {
 	auto vertex = _vertices.find(v);
 	if(vertex == _vertices.end()) {
-		firenoo::GraphVertexW<T, W>* vertex_new = new firenoo::GraphVertexW<T, W>(v);
+		firenoo::GraphVertexWB<T, W>* vertex_new = new firenoo::GraphVertexWB<T, W>(v);
 		_vertices[v] = vertex_new;
 		return vertex_new;
 	}
@@ -546,10 +550,10 @@ firenoo::GraphVertexW<T, W>* firenoo::GraphW<T, W, Hash, KeyEq>::addVertex(const
 }
 
 template<class T, class W, class Hash, class KeyEq>
-firenoo::GraphVertexW<T, W>* firenoo::GraphW<T, W, Hash, KeyEq>::addVertex(const T&& v) {
+firenoo::GraphVertexWB<T, W>* firenoo::GraphWB<T, W, Hash, KeyEq>::addVertex(const T&& v) {
 	auto vertex = _vertices.find(v);
 	if(vertex == _vertices.end()) {
-		firenoo::GraphVertexW<T, W>* vertex_new = new firenoo::GraphVertexW<T, W>(v);
+		firenoo::GraphVertexWB<T, W>* vertex_new = new firenoo::GraphVertexWB<T, W>(v);
 		_vertices[v] = vertex_new;
 		return vertex_new;
 	}
@@ -557,7 +561,7 @@ firenoo::GraphVertexW<T, W>* firenoo::GraphW<T, W, Hash, KeyEq>::addVertex(const
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::addVertex(GraphVertexW<T, W>* v) {
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::addVertex(GraphVertexWB<T, W>* v) {
 	if(!hasVertex(v->get())) {
 		_vertices[v->get()] = v;
 		return true;
@@ -566,32 +570,32 @@ bool firenoo::GraphW<T, W, Hash, KeyEq>::addVertex(GraphVertexW<T, W>* v) {
 }
 
 template<class T, class W, class Hash, class KeyEq>
-firenoo::GraphVertexW<T, W>* firenoo::GraphW<T, W, Hash, KeyEq>::removeVertex(const T& v) {
+firenoo::GraphVertexWB<T, W>* firenoo::GraphWB<T, W, Hash, KeyEq>::removeVertex(const T& v) {
 	auto search = _vertices.find(v);
 	if(search == _vertices.end()) {
 		return nullptr;
 	}
-	search->second->clearIndegree();
+	search->second->clearEdges();
 	_vertices.erase(search);
 	return search->second;
 }
 
 template<class T, class W, class Hash, class KeyEq>
-firenoo::GraphVertexW<T, W>* firenoo::GraphW<T, W, Hash, KeyEq>::removeVertex(const T&& v) {
+firenoo::GraphVertexWB<T, W>* firenoo::GraphWB<T, W, Hash, KeyEq>::removeVertex(const T&& v) {
 	auto search = _vertices.find(v);
 	if(search == _vertices.end()) {
 		return nullptr;
 	}
-	search->second->clearIndegree();
+	search->second->clearEdges();
 	_vertices.erase(search);
 	return search->second;
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::removeVertex(GraphVertexW<T, W>* v) {
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::removeVertex(GraphVertexWB<T, W>* v) {
 	auto search = _vertices.find(v->get());
 	if(search != _vertices.end()) {
-		search->second->clearIndegree();
+		search->second->clearEdges();
 		_vertices.erase(search);
 		delete search->second;
 		return true;
@@ -599,60 +603,59 @@ bool firenoo::GraphW<T, W, Hash, KeyEq>::removeVertex(GraphVertexW<T, W>* v) {
 	return false;
 }
 
+
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::addEdge(const T& v1, const T& v2, W w) {
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::addEdge(const T& v1, const T& v2, W w) {
 	if(hasVertex(v1) && hasVertex(v2) && !hasEdge(v1, v2)) {
-		GraphVertexW<T, W>* src = _vertices[v1];
-		GraphVertexW<T, W>* snk = _vertices[v2];
+		GraphVertexWB<T, W>* s1 = _vertices[v1];
+		GraphVertexWB<T, W>* s2 = _vertices[v2];
 		++_edgeCount;
-		src->addEdge(snk, w);
-		return true;
+		s1->addEdge(s2, w);
+		s2->addEdge(s1, w);
 	}
 	return false;
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::addEdge(const T&& v1, const T& v2, W w) {
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::addEdge(const T&& v1, const T& v2, W w) {
 	if(hasVertex(v1) && hasVertex(v2) && !hasEdge(v1, v2)) {
-		GraphVertexW<T, W>* src = _vertices[v1];
-		GraphVertexW<T, W>* snk = _vertices[v2];
+		GraphVertexWB<T, W>* s1 = _vertices[v1];
+		GraphVertexWB<T, W>* s2 = _vertices[v2];
 		++_edgeCount;
-		src->addEdge(snk, w);
-		return true;
+		s1->addEdge(s2, w);
+		s2->addEdge(s1, w);
 	}
 	return false;
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::addEdge(const T& v1, const T&& v2, W w) {
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::addEdge(const T& v1, const T&& v2, W w) {
 	if(hasVertex(v1) && hasVertex(v2) && !hasEdge(v1, v2)) {
-		GraphVertexW<T, W>* src = _vertices[v1];
-		GraphVertexW<T, W>* snk = _vertices[v2];
+		GraphVertexWB<T, W>* s1 = _vertices[v1];
+		GraphVertexWB<T, W>* s2 = _vertices[v2];
 		++_edgeCount;
-		src->addEdge(snk, w);
-		return true;
+		s1->addEdge(s2, w);
+		s2->addEdge(s1, w);
 	}
 	return false;
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::addEdge(const T&& v1, const T&& v2, W w) {
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::addEdge(const T&& v1, const T&& v2, W w) {
 	if(hasVertex(v1) && hasVertex(v2) && !hasEdge(v1, v2)) {
-		GraphVertexW<T, W>* src = _vertices[v1];
-		GraphVertexW<T, W>* snk = _vertices[v2];
+		GraphVertexWB<T, W>* s1 = _vertices[v1];
+		GraphVertexWB<T, W>* s2 = _vertices[v2];
 		++_edgeCount;
-		src->addEdge(snk, w);
-		return true;
+		s1->addEdge(s2, w);
+		s2->addEdge(s1, w);
 	}
 	return false;
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::removeEdge(const T& v1, const T& v2) {
-	auto src = _vertices.find(v1);
-	auto snk = _vertices.find(v2);
-	if(src != _vertices.end() && snk != _vertices.end() && hasEdge(v1, v2)) {
-		src->second->removeEdge(snk->second);
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::removeEdge(const T& v1, const T& v2) {
+	if(hasEdge(v1, v2)) {
+		_vertices[v1]->removeEdge(_vertices[v2]);
 		--_edgeCount;
 		return true;
 	}
@@ -660,11 +663,9 @@ bool firenoo::GraphW<T, W, Hash, KeyEq>::removeEdge(const T& v1, const T& v2) {
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::removeEdge(const T&& v1, const T& v2) {
-	auto src = _vertices.find(v1);
-	auto snk = _vertices.find(v2);
-	if(src != _vertices.end() && snk != _vertices.end() && hasEdge(v1, v2)) {
-		src->second->removeEdge(snk->second);
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::removeEdge(const T&& v1, const T& v2) {
+	if(hasEdge(v1, v2)) {
+		_vertices[v1]->removeEdge(_vertices[v2]);
 		--_edgeCount;
 		return true;
 	}
@@ -672,11 +673,9 @@ bool firenoo::GraphW<T, W, Hash, KeyEq>::removeEdge(const T&& v1, const T& v2) {
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::removeEdge(const T& v1, const T&& v2) {
-	auto src = _vertices.find(v1);
-	auto snk = _vertices.find(v2);
-	if(src != _vertices.end() && snk != _vertices.end() && hasEdge(v1, v2)) {
-		src->second->removeEdge(snk->second);
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::removeEdge(const T& v1, const T&& v2) {
+	if(hasEdge(v1, v2)) {
+		_vertices[v1]->removeEdge(_vertices[v2]);
 		--_edgeCount;
 		return true;
 	}
@@ -684,11 +683,9 @@ bool firenoo::GraphW<T, W, Hash, KeyEq>::removeEdge(const T& v1, const T&& v2) {
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::removeEdge(const T&& v1, const T&& v2) {
-	auto src = _vertices.find(v1);
-	auto snk = _vertices.find(v2);
-	if(src != _vertices.end() && snk != _vertices.end() && hasEdge(v1, v2)) {
-		src->second->removeEdge(snk->second);
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::removeEdge(const T&& v1, const T&& v2) {
+	if(hasEdge(v1, v2)) {
+		_vertices[v1]->removeEdge(_vertices[v2]);
 		--_edgeCount;
 		return true;
 	}
@@ -696,10 +693,21 @@ bool firenoo::GraphW<T, W, Hash, KeyEq>::removeEdge(const T&& v1, const T&& v2) 
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::removeNeighbors(const T& v) {
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::removeNeighbors(const T& v) {
 	auto query = _vertices.find(v);
 	if(query != _vertices.end()) {
-		GraphVertexW<T, W>* vertex = query->second;
+		GraphVertexWB<T, W>* vertex = query->second;
+		vertex->clearEdges();
+		return true;
+	}
+	return false;
+}
+
+template<class T, class W, class Hash, class KeyEq>
+bool firenoo::GraphWB<T, W, Hash, KeyEq>::removeNeighbors(const T&& v) {
+	auto query = _vertices.find(v);
+	if(query != _vertices.end()) {
+		GraphVertexWB<T, W>* vertex = query->second;
 		_edgeCount -= vertex->outdegree();
 		vertex->clearEdges();
 		return true;
@@ -708,19 +716,7 @@ bool firenoo::GraphW<T, W, Hash, KeyEq>::removeNeighbors(const T& v) {
 }
 
 template<class T, class W, class Hash, class KeyEq>
-bool firenoo::GraphW<T, W, Hash, KeyEq>::removeNeighbors(const T&& v) {
-	auto query = _vertices.find(v);
-	if(query != _vertices.end()) {
-		GraphVertexW<T, W>* vertex = query->second;
-		_edgeCount -= vertex->outdegree();
-		vertex->clearEdges();
-		return true;
-	}
-	return false;
-}
-
-template<class T, class W, class Hash, class KeyEq>
-void firenoo::GraphW<T, W, Hash, KeyEq>::clear() {
+void firenoo::GraphWB<T, W, Hash, KeyEq>::clear() {
 	for(auto v : _vertices) {
 		delete v.second;
 	}

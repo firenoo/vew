@@ -1,14 +1,16 @@
-#ifndef _FN_GRAPH_VERTEXW
-    #define _FN_GRAPH_VERTEXW 0
+#ifndef _FN_GRAPH_VERTEXWB
+    #define _FN_GRAPH_VERTEXWB 0
 	#include <unordered_map>
 	#include <unordered_set>
 	#include <iterator>
 namespace firenoo {
 /*
  * ----------------------------------------------------------------------------
- * GraphVertexW
+ * GraphVertexWB
  * ----------------------------------------------------------------------------
- * Representation of a general graph vertex with weighted edges.
+ * Representation of a graph vertex with weighted edges, specialized for
+ * undirected use cases. For the most part, the code is the same, except there
+ * is no need to keep track of indegrees (saves some memory).
  * Template args:
  * T - type of object that backs this vertex.
  * W - type to use as an edge weight. Must be comparable.
@@ -18,19 +20,18 @@ namespace firenoo {
  * _neighbors: Neighbors of this graph vertex.
  */
 template<class T, class W>
-class GraphVertexW {	
+class GraphVertexWB {	
 private:
 	const T& _obj;
-	std::unordered_set<GraphVertexW<T, W>*> _indegrees;
-	std::unordered_map<GraphVertexW<T, W>*, W> _neighbors;
+	std::unordered_map<GraphVertexWB<T, W>*, W> _neighbors;
 
 public:
 
-	GraphVertexW(const T& obj);
+	GraphVertexWB(const T& obj);
 
-	GraphVertexW(const T&& obj);
+	GraphVertexWB(const T&& obj);
 
-	~GraphVertexW();
+	~GraphVertexWB();
 
 //READ operations	
 	/*
@@ -45,7 +46,7 @@ public:
 	const T& get() const;
 
 	/*
-	 * Gets the outdegree of this vertex.
+	 * Gets the outdegree of this vertex. Equal to the indegree.
 	 * READ operation.
 	 * Returns:
 	 * -- an unsigned int equal to the outdegree of this vertex.
@@ -53,11 +54,11 @@ public:
 	size_t outdegree() const;
 
 	/*
-	 * Gets the indegree of this vertex.
+	 * Gets the indegree of this vertex. Equal to the outdegree.
 	 *
 	 * READ operation.
 	 * Returns:
-	 *  - an unsigned int equal to the indegree of this vertex.
+	 *  - an unsigned int equal to the outdegree of this vertex.
 	 */
 	size_t indegree() const;
 
@@ -71,7 +72,7 @@ public:
 	 *  - true if and only if there is an edge from this vertex to the other
 	 *    vertex.
 	 */
-	bool hasEdge(GraphVertexW<T, W>* other) const;
+	bool hasEdge(GraphVertexWB<T, W>* other) const;
 
 	/*
 	 * Gets the edge weight between the two vertices. Reads the value into 
@@ -81,8 +82,8 @@ public:
 	 * Parameters:
 	 *  - other : Vertex to check.
 	 */
-	void getEdge(GraphVertexW<T, W>* other, W& in) const;
-	
+	void getEdge(GraphVertexWB<T, W>* other, W& in) const;
+
 //WRITE operations
 
 	/*
@@ -95,7 +96,7 @@ public:
 	 *  - true an edge was successfully added.
 	 *  - false if an edge already exists.
 	 */
-	void addEdge(GraphVertexW<T, W>* other, W weight);
+	bool addEdge(GraphVertexWB<T, W>* other, W weight);
 	
 	/*
 	 * Removes the specified edge.
@@ -106,7 +107,7 @@ public:
 	 * Returns:
 	 *  - true if and only if an edge was successfully removed.
 	 */
-	void removeEdge(GraphVertexW<T, W>* other);
+	bool removeEdge(GraphVertexWB<T, W>* other);
 
 	/*
 	 * Removes all edges from this vertex.
@@ -116,21 +117,14 @@ public:
 	void clearEdges();
 
 	/*
-	 * Removes all edges to this vertex.
-	 *
-	 * WRITE operation.
-	 */
-	void clearIndegree();
-
-	/*
 	 * Gets an iterator pointing to an arbitrary neighbor. 
 	 */
-	typename std::unordered_map<GraphVertexW<T, W>*, W>::const_iterator neighbors();
+	typename std::unordered_map<GraphVertexWB<T, W>*, W>::const_iterator neighbors();
 
 	/*
 	 * Gets an iterator pointing to _neighbors.end(). 
 	 */
-	typename std::unordered_map<GraphVertexW<T, W>*, W>::const_iterator neighborsEnd();
+	typename std::unordered_map<GraphVertexWB<T, W>*, W>::const_iterator neighborsEnd();
 
 };
 
@@ -138,42 +132,41 @@ public:
 //Constructors
 
 template<class T, class W>
-firenoo::GraphVertexW<T, W>::GraphVertexW(const T& obj) : _obj(obj) {}
+firenoo::GraphVertexWB<T, W>::GraphVertexWB(const T& obj) : _obj(obj) {}
 
 template<class T, class W>
-firenoo::GraphVertexW<T, W>::GraphVertexW(const T&& obj) : _obj(obj) {}
+firenoo::GraphVertexWB<T, W>::GraphVertexWB(const T&& obj) : _obj(obj) {}
 
 template<class T, class W>
-firenoo::GraphVertexW<T, W>::~GraphVertexW() {
+firenoo::GraphVertexWB<T, W>::~GraphVertexWB() {
 	clearEdges();
-	clearIndegree();
 }
 
 
 //READ operations -------------------------------------------------------------
 
 template<class T, class W>
-void firenoo::GraphVertexW<T, W>::getEdge(GraphVertexW<T, W>* other, W& in) const {
+void firenoo::GraphVertexWB<T, W>::getEdge(GraphVertexWB<T,W>* other, W& in) const {
 	in = _neighbors.find(other)->second;
 }
 
 template<class T, class W>
-const T& firenoo::GraphVertexW<T, W>::get() const {
+const T& firenoo::GraphVertexWB<T, W>::get() const {
 	return _obj;
 }
 
 template<class T, class W>
-size_t firenoo::GraphVertexW<T, W>::indegree() const {
-	return _indegrees.size();
-}
-
-template<class T, class W>
-size_t firenoo::GraphVertexW<T, W>::outdegree() const {
+size_t firenoo::GraphVertexWB<T, W>::indegree() const {
 	return _neighbors.size();
 }
 
 template<class T, class W>
-bool firenoo::GraphVertexW<T, W>::hasEdge(GraphVertexW<T, W>* other) const {
+size_t firenoo::GraphVertexWB<T, W>::outdegree() const {
+	return _neighbors.size();
+}
+
+template<class T, class W>
+bool firenoo::GraphVertexWB<T, W>::hasEdge(GraphVertexWB<T, W>* other) const {
 	auto edge = _neighbors.find(other);
 	return edge != _neighbors.end();
 }
@@ -181,44 +174,41 @@ bool firenoo::GraphVertexW<T, W>::hasEdge(GraphVertexW<T, W>* other) const {
 //WRITE operations ------------------------------------------------------------
 
 template<class T, class W>
-void firenoo::GraphVertexW<T, W>::addEdge(GraphVertexW<T, W>* other, W weight) {
+bool firenoo::GraphVertexWB<T, W>::addEdge(GraphVertexWB<T, W>* other, W weight) {
 	//Lazy style - only add an entry if needed.
-	_neighbors[other] = weight;
-	other->_indegrees.insert(this);
+	if(!hasEdge(other)) {
+		_neighbors[other] = weight;
+		other->_neighbors[this] = weight;
+		return true;
+	}
+	return false;
 }
 
 template<class T, class W>
-void firenoo::GraphVertexW<T, W>::removeEdge(GraphVertexW<T, W>* other) {
-	_neighbors.erase(other);
-	other->_indegrees.erase(this);
+bool firenoo::GraphVertexWB<T, W>::removeEdge(GraphVertexWB<T, W>* other) {
+	if(hasEdge(other)) {
+		_neighbors.erase(other);
+		other->_neighbors.erase(this);
+		return true;
+	}
+	return false;
 }
 
 template<class T, class W>
-void firenoo::GraphVertexW<T, W>::clearEdges() {
+void firenoo::GraphVertexWB<T, W>::clearEdges() {
 	for(auto neighbor : _neighbors) {
-		neighbor.first->_indegrees.erase(this);
+		neighbor.first->_neighbors.erase(this);
 	}
 	_neighbors.clear();
-
-}
-
-
-template<class T, class W>
-void firenoo::GraphVertexW<T, W>::clearIndegree() {
-	for(auto in_edge : _indegrees) {
-		in_edge->removeEdge(this);
-	}
-	_indegrees.clear();
-
 }
 
 template<class T, class W>
-typename std::unordered_map<GraphVertexW<T, W>*,W>::const_iterator firenoo::GraphVertexW<T, W>::neighbors() {
+typename std::unordered_map<GraphVertexWB<T, W>*,W>::const_iterator firenoo::GraphVertexWB<T, W>::neighbors() {
 	return _neighbors.cbegin();
 }
 
 template<class T, class W>
-typename std::unordered_map<GraphVertexW<T, W>*,W>::const_iterator firenoo::GraphVertexW<T, W>::neighborsEnd() {
+typename std::unordered_map<GraphVertexWB<T, W>*,W>::const_iterator firenoo::GraphVertexWB<T, W>::neighborsEnd() {
 	return _neighbors.cend();
 }
 
