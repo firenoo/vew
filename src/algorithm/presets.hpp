@@ -7,38 +7,40 @@
  * Presets
  * The functions in this file construct predefined graphs.
  */
-namespace firenoo::undirected {
+namespace firenoo {
+
+namespace graphwb {
 
 	/*
 	 * Constructs an undirected line graph with `n` vertices, with each
 	 * edge having weight `w`. Vertices are labeled `0` to `n-1`.
 	 */
-	GraphWB<int> line(size_t n, double w);
+	GraphWB<int> line(int n, double w);
 
 	/*
 	 * Constructs a complete graph with `n` vertices, with each
 	 * edge having weight `w`.
 	 */
-	GraphWB<int> complete(size_t n, double w);
+	GraphWB<int> complete(int n, double w);
 
 	/*
 	 * Constructs a cycle graph with `n` vertices, with each
 	 * edge having weight `w`.
 	 */
-	GraphWB<int> cycle(size_t n, double w);
+	GraphWB<int> cycle(int n, double w);
 
 	/*
 	 * Constructs a lattice graph with `n*m` vertices, with each
 	 * edge having weight `w`.
 	 * Vertices are labeled `0` to `n*m-1`. 
 	 */
-	GraphWB<int> lattice(size_t n, size_t m, double w);
+	GraphWB<int> lattice(int n, int m, double w);
 
 	/*
 	 * Constructs a torus graph with `n x m` vertices, with each
 	 * edge having weight `w`.
 	 */
-	GraphWB<int> torus(size_t n, size_t m, double w);
+	GraphWB<int> torus(int n, int m, double w);
 
 	/*
 	 * Constructs a 3-cube graph. 8 vertices, 12 edges.
@@ -60,37 +62,37 @@ namespace firenoo::undirected {
 	GraphWB<int> chavatal(double w);
 
 
-	GraphWB<int> line(size_t n, double w) {
+	GraphWB<int> line(int n, double w) {
 		GraphWB<int> g;
 		for(int i = 0; i < n; ++i) {
 			g.addVertex(i);
 		}
-		for(size_t i = 0; i < n-1; ++i) {
+		for(int i = 0; i < n-1; ++i) {
 			g.addEdge(i, i+1, w);
 		}
 		return g;
 	}
 
-	GraphWB<int> complete(size_t n, double w) {
+	GraphWB<int> complete(int n, double w) {
 		GraphWB<int> g;
 		for(int i = 0; i < n; ++i) {
 			g.addVertex(i);
 		}
-		for(size_t i = 0; i < n-2; ++i) {
-			for(size_t j = i+1; j < n-1; ++j) {
+		for(int i = 0; i < n-2; ++i) {
+			for(int j = i+1; j < n-1; ++j) {
 				g.addEdge(i, j, w);
 			}
 		}
 		return g;
 	}
 
-	GraphWB<int> cycle(size_t n, double w) {
+	GraphWB<int> cycle(int n, double w) {
 		GraphWB<int> g = line(n, w);
 		g.addEdge(0, n-1, w);
 		return g;
 	}
 
-	GraphWB<int> lattice(size_t n, size_t m, double w) {
+	GraphWB<int> lattice(int n, int m, double w) {
 		GraphWB<int> g ;
 		for(int i = 0; i < n * m; ++i) {
 			g.addVertex(i);
@@ -106,7 +108,7 @@ namespace firenoo::undirected {
 		return g;
 	}
 
-	GraphWB<int> torus(size_t n, size_t m, double w) {
+	GraphWB<int> torus(int n, int m, double w) {
 		GraphWB<int> g = lattice(n, m, w);
 		for(int i = 0; i < m; ++i) {
 			//loop around - horizontal
@@ -116,6 +118,7 @@ namespace firenoo::undirected {
 			//loop around - vertical
 			g.addEdge(i, (m - 1) + i, w);
 		}
+		return g;
 	}
 
 	GraphWB<int> cube3(double w) {
@@ -196,4 +199,5 @@ namespace firenoo::undirected {
 	}
 }
 
+}
 #endif

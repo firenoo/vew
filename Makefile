@@ -1,28 +1,28 @@
 # use g++
 CXX = g++
 CXXFLAGS ?= -Wall -pedantic -g -O0
-TEST = out/tests/GraphTest.o
+TEST = out/tests/GraphWTest.o
 RM ?= rm -f
-INC = -Isrc/graph
+INC = -Isrc/graph -Isrc/algorithm
 DEST = out
 SRC = src
 
-_LIBGRAPH = graphw.o graph_vertex.o
-LIBGRAPH = $(_LIBGRAPH:%=$(DEST)/graph/%)
+_LIBGRAPH = graphw.hpp vertexw.hpp
+# LIBGRAPH = $(_LIBGRAPH:%=$(DEST)/graph/%)
 
 all: clean test
 
 test: $(TEST)
 
-$(TEST): tests/GraphTest.cpp libgraph
+$(TEST): tests/GraphWTest.cpp $(_LIBGRAPH)
 	$(CXX) -o $@ $(CXXFLAGS) $(INC) $< $(LIBGRAPH)
 
+$(_LIBGRAPH):
+	
 
-libgraph: $(LIBGRAPH)
-
-$(DEST)/graph/%.o: $(SRC)/graph/%.cpp
-	$(CXX) -c -o $@ $(CXXFLAGS) $(INC) $<
+# $(DEST)/graph/%.o: $(SRC)/graph/%.cpp
+# 	$(CXX) -c -o $@ $(CXXFLAGS) $(INC) $<
 
 .PHONY: clean
 clean:
-	$(RM) $(OUTFILES) out/*.o
+	$(RM) $(OUTFILES) out/tests/*.o

@@ -206,7 +206,7 @@ void firenoo::GraphVertexW<T, W>::clearEdges() {
 template<class T, class W>
 void firenoo::GraphVertexW<T, W>::clearIndegree() {
 	for(auto in_edge : _indegrees) {
-		in_edge->removeEdge(this);
+		in_edge->_neighbors.erase(this);
 	}
 	_indegrees.clear();
 
