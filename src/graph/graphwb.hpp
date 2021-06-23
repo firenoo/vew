@@ -25,7 +25,7 @@ template<class T, class W = double, class Hash = std::hash<T>, class KeyEq = std
 class GraphWB : Graph<T, W, GraphVertexWB<T, W>> {
 
 private:
-	std::unordered_map<std::reference_wrapper<const T>, GraphVertexWB<T, W>*, Hash, KeyEq> _vertices;
+	std::unordered_map<T, GraphVertexWB<T, W>*, Hash, KeyEq> _vertices;
 	size_t _edgeCount;
 
 public:
@@ -455,7 +455,7 @@ size_t firenoo::GraphWB<T, W, Hash, KeyEq>::vertexCount() const {
 
 template<class T, class W, class Hash, class KeyEq>
 size_t firenoo::GraphWB<T, W, Hash, KeyEq>::edgeCount() const {
-	return this->_edgeCount;
+	return _edgeCount;
 }
 
 template<class T, class W, class Hash, class KeyEq>
@@ -612,6 +612,7 @@ bool firenoo::GraphWB<T, W, Hash, KeyEq>::addEdge(const T& v1, const T& v2, W w)
 		++_edgeCount;
 		s1->addEdge(s2, w);
 		s2->addEdge(s1, w);
+		return true;
 	}
 	return false;
 }
@@ -636,6 +637,7 @@ bool firenoo::GraphWB<T, W, Hash, KeyEq>::addEdge(const T& v1, const T&& v2, W w
 		++_edgeCount;
 		s1->addEdge(s2, w);
 		s2->addEdge(s1, w);
+		return true;
 	}
 	return false;
 }
@@ -648,6 +650,7 @@ bool firenoo::GraphWB<T, W, Hash, KeyEq>::addEdge(const T&& v1, const T&& v2, W 
 		++_edgeCount;
 		s1->addEdge(s2, w);
 		s2->addEdge(s1, w);
+		return true;
 	}
 	return false;
 }

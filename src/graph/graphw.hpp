@@ -27,7 +27,7 @@ namespace firenoo {
 template<class T, class W = double, class Hash = std::hash<T>, class KeyEq = std::equal_to<T>>
 class GraphW : public Graph<T, W, GraphVertexW<T, W>> {
 private:
-	std::unordered_map<std::reference_wrapper<const T>, GraphVertexW<T, W>*, Hash, KeyEq> _vertices;
+	std::unordered_map<T, GraphVertexW<T, W>*, Hash, KeyEq> _vertices;
 	size_t _edgeCount;
 
 public:
