@@ -25,9 +25,6 @@ namespace firenoo {
 		Vertex* _vertex;
 	};
 
-	template<class T>
-	using DFSComponent = std::vector<T>;
-
 	/*
 	 * Perform depth-first search, keeping only information about
 	 * connected components. Starts on an arbitrary vertex.
@@ -35,11 +32,13 @@ namespace firenoo {
 	 * Parameters:
 	 *  - g : A GraphW instance (weighted, directed graph)
 	 * Returns:
-	 *  - A std::vector, each element being another std::vector (DFSComponent)
-	 *    of vertices that are connected (in no particular order)
+	 *  - A std::vector, each element being another std::vector (a component)
+	 *    of vertices that are connected (in no particular order). Note: each
+	 *    component std::vector is allocated on the heap; it is the user's
+	 *    responsibility to manage it.
 	 */ 
 	template<class T, class W>
-	std::vector<DFSComponent<GraphVertexW<T, W>*>> dfs_cc(const GraphW<T, W>& g);
+	std::vector<std::unordered_set<GraphVertexW<T, W>*>*> dfs_cc(const GraphW<T, W>& g);
 
 	/*
 	 * Perform depth-first search, keeping only information about
@@ -48,11 +47,11 @@ namespace firenoo {
 	 * Parameters:
 	 *  - g : A GraphWB instance (weighted, undirected graph)
 	 * Returns:
-	 *  - A std::vector, each element being another std::vector (DFSComponent)
+	 *  - A std::vector, each element being another std::vector (a component)
 	 *    of vertices that are connected (in no particular order)
 	 */ 
 	template<class T, class W>
-	std::vector<DFSComponent<GraphVertexWB<T, W>*>> dfs_cc(const GraphWB<T, W>& g);
+	std::vector<std::unordered_set<GraphVertexWB<T, W>*>*> dfs_cc(const GraphWB<T, W>& g);
 
 	/*
 	 * Perform depth-first search, keeping only information about
@@ -61,11 +60,11 @@ namespace firenoo {
 	 * Parameters:
 	 *  - g : A GraphWB instance (weighted, undirected graph)
 	 * Returns:
-	 *  - A std::vector, each element being an arbitrary vertex in a connected
-	 *    component.
+	 *  - A std::vector, each element being another std::vector (a component)
+	 *    of vertices that are connected (in no particular order)
 	 */ 
-	template<class T, class W>
-	std::vector<GraphVertexWB<T, W>*> dfs_cc(const GraphWB<T, W>& g, std::initializer_list<GraphVertexWB<T, W>*>& list);
+	// template<class T, class W>
+	// std::vector<GraphVertexWB<T, W>*> dfs_cc(const GraphWB<T, W>& g);
 
 	/*
 	 * Perform depth-first search, retaining information about 
@@ -77,72 +76,129 @@ namespace firenoo {
 	 * Returns:
 	 *  - A std::vector, each element being a vector
 	 */ 
+	// template<class T, class W>
+	// std::vector<DFSResult<GraphVertexW<T,W>>> dfs_full(const GraphW<T,W>& g);
+
+	#define Graph GraphW<T, W>
+	#define Vertex GraphVertexW<T, W>
+	#define Component std::unordered_set<GraphVertexW<T, W>*>
+
 	template<class T, class W>
-	std::vector<DFSResult<GraphVertexW<T,W>>> dfs_full(const GraphW<T,W>& g);
-
-
-
-	template<class T, class W>
-	std::vector<DFSComponent<GraphVertexW<T,W>*>> dfs_cc(const GraphW<T, W>& g) {
-		std::vector<DFSComponent<GraphVertexW<T,W>*>> result;
+	std::vector<Component*> dfs_cc(const Graph& g) {
+		std::vector<Component*> result;
 		if(g.vertexCount() == 0) {
 			return result;
 		}
-		std::stack<GraphVertexW<T, W>*> work_stack;
-		std::unordered_set<GraphVertexW<T, W>*> visited;
+		std::stack<Vertex*> work_stack;
+		std::unordered_map<Vertex*, Component*> visited;
 		auto iter = g.begin();
 		while(iter != g.end()) {
-			GraphVertexW<T, W>* vert = iter->second;
-			if(visited.find(vert) != visited.end()) {
+			//Main loop
+			Vertex* vert = iter->second; //top-level vertex
+			if(visited.find(vert) == visited.end()) {
+				//Start a new DFS tree
 				work_stack.push(vert);
-				DFSComponent<GraphVertexW<T, W>*> component;
-				result.push_back(component);
+				//"Uptree"
+				Component* component = new Component();
+				bool addComponent = true;
 				while(!work_stack.empty()) {
-					GraphVertexW<T, W>* vertex = work_stack.top();
-					visited.insert(vertex);
-					component.push_back(vertex);
-					auto iter = vertex->neighbors();
-					while(iter != vertex->neighborsEnd()) {
-						if(visited.find(iter->first) != visited.end()) {
-							work_stack.push(iter->first);
+					//DFS search loop
+					Vertex* vertex = work_stack.top();
+					work_stack.pop();
+					visited[vertex] = component; //Mark as visited
+					component->insert(vertex); //Add vertex to component
+					//Iterate through neighbors
+					auto n = vertex->neighbors();
+					while(n != vertex->neighborsEnd()) {
+						//Look if neighbor was already visited
+						auto old_component = visited.find(n->first);
+						if(old_component == visited.end()) {
+							//Neighbor not already visited
+							work_stack.push(n->first);
+						} else if(old_component->second != component) {
+							//Neighbor visited already, and is in a different
+							//component. Must bridge the two components.
+							Component* other = old_component->second;
+							//Add all vertices to the larger of the two
+							//components, and set it to be the new
+							//current component.
+							if(other->size() >= component->size()) {
+								for(Vertex* v : *component) {
+									visited[v] = other;
+									other->insert(v);
+								}								
+								delete component;
+								component = other;
+								addComponent = false;
+							} else {
+								for(Vertex* v : *other) {
+									visited[v] = component;
+									component->insert(v);
+								}								
+								delete other;
+							}
 						}
-						++iter;
+						++n;
 					}
 				}
+				if(addComponent) {
+					result.push_back(component);
+				}
 			}
+			++iter;
 		}
 		return result;
 	}
+	#undef Component
+	#undef Vertex
+	#undef Graph
+	#define Graph GraphWB<T, W>
+	#define Vertex GraphVertexWB<T, W>
+	#define Component std::unordered_set<GraphVertexWB<T, W>*>
 
 	template<class T, class W>
-	std::vector<DFSComponent<GraphVertexWB<T, W>*>> dfs_cc(const GraphWB<T, W>& g) {
-		std::vector<DFSComponent<GraphVertexWB<T,W>*>> result;
+	std::vector<Component*> dfs_cc(const Graph& g) {
+		std::vector<Component*> result;
 		if(g.vertexCount() == 0) {
 			return result;
 		}
-		std::stack<GraphVertexWB<T, W>*> work_stack;
-		std::unordered_set<GraphVertexW<T,W>*> visited;
-		for(auto g_vertex : g._vertices) {
-			if(visited.find(g_vertex->second) != visited.end()) {
-				work_stack.push(g_vertex->second);
-				DFSComponent<GraphVertexWB<T,W>*> component;
-				result.push_back(component);
+		std::stack<Vertex*> work_stack;
+		std::unordered_map<Vertex*, Component*> visited;
+		auto iter = g.begin();
+		while(iter != g.end()) {
+			//Main loop
+			Vertex* vert = iter->second; //top-level vertex
+			if(visited.find(vert) == visited.end()) {
+				//Start a new DFS tree
+				work_stack.push(vert);
+				Component* component = new Component();
 				while(!work_stack.empty()) {
-					GraphVertexWB<T, W>* vertex = work_stack.top();
-					visited.insert(vertex);
-					component.push_back(vertex);
-					auto iter = vertex->neighbors();
-					while(iter != vertex->neighborsEnd()) {
-						if(visited.find(iter->second) != visited.end()) {
-							work_stack.push(iter->second);
+					//DFS search loop
+					Vertex* vertex = work_stack.top();
+					work_stack.pop();
+					visited[vertex] = component; //Mark as visited
+					component->insert(vertex); //Add vertex to component
+					//Iterate through neighbors
+					auto n = vertex->neighbors();
+					while(n != vertex->neighborsEnd()) {
+						//Look if neighbor was already visited
+						auto old_component = visited.find(n->first);
+						if(old_component == visited.end()) {
+							//Neighbor not already visited
+							work_stack.push(n->first);
 						}
-						++iter;
+						++n;
 					}
 				}
+				result.push_back(component);
 			}
+			++iter;
 		}
 		return result;
 	}
+	#undef Component
+	#undef Vertex
+	#undef Graph
 
 
 }

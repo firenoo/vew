@@ -2,7 +2,7 @@
 #include <exception>
 #include <cassert>
 #include <iostream>
-#include "graphw.hpp"
+#include "graphwb.hpp"
 #include "presets.hpp"
 #include "search.hpp"
 namespace firenoo {
@@ -34,7 +34,7 @@ void testSuite1() {
 }
 
 void testAddVertex() {
-	GraphW<int> g;
+	GraphWB<int> g;
 	for(size_t i = 0; i < 100; ++i) {
 		g.addVertex(static_cast<int>(i)); //test &
 	}
@@ -48,7 +48,7 @@ void testAddVertex() {
 }
 
 void testRemoveVertex() {
-	GraphW<int> g;
+	GraphWB<int> g;
 	for(size_t i = 0; i < 50; ++i) {
 		g.addVertex(static_cast<int>(i));
 	}
@@ -64,7 +64,7 @@ void testRemoveVertex() {
 }
 
 void testAddEdge() {
-	GraphW<int> g;
+	GraphWB<int> g;
 	assert(!g.addEdge(0, 1, 1.0));
 	assert(g.edgeCount() == 0);
 	g.addVertex(0);
@@ -73,7 +73,7 @@ void testAddEdge() {
 	const double WEIGHT = 1.0;
 	double w;
 	assert(g.addEdge(0, 1, WEIGHT));
-	assert(!g.hasEdge(1, 0));
+	assert(g.hasEdge(1, 0));
 	int a = 0, b = 1;
 	assert(g.hasEdge(0, 1));
 	assert(g.hasEdge(a, 1));
@@ -91,12 +91,14 @@ void testAddEdge() {
 	w = 0;
 	assert(g.getEdge(a, b, w));
 	assert(w == WEIGHT);
-
+	w = 0;
+	assert(g.getEdge(b, a, w));
+	assert(w == WEIGHT);
 	assert(g.edgeCount() == 1);
 }
 
 void testRemoveEdge() {
-	GraphW<int> g;
+	GraphWB<int> g;
 	const double WEIGHT = 1.0;
 	g.addVertex(0);
 	g.addVertex(1);
@@ -116,21 +118,16 @@ void testSuite2() {
 }
 
 void testDFS_CC() {
-	GraphW<int> g;
+	GraphWB<int> g;
 	g.addVertex(0);
 	g.addVertex(1);
 
 	g.addEdge(0, 1, 1.0);
 	auto dfs = dfs_cc<int>(g);
 	assert(dfs.size() == 1);
-	auto comp = *dfs[0];
-	assert(comp.size() == 2);
-	for(auto v : comp) {
-		assert(g.hasVertex(v->get()));
-	}
 }
 
-}
+} 
 
 }
 int main() {
