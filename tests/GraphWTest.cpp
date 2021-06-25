@@ -5,7 +5,7 @@
 #include "graphw.hpp"
 #include "graphwb.hpp"
 #include "presets.hpp"
-
+#include "search.hpp"
 namespace firenoo {
 
 //Test Suite
@@ -17,6 +17,8 @@ void testAddVertex();
 void testRemoveVertex();
 void testAddEdge();
 void testRemoveEdge();
+void testDFS_CC();
+
 /*
  * Test Suite 1 - basic functions
  * - add vertex
@@ -65,7 +67,7 @@ void testRemoveVertex() {
 void testAddEdge() {
 	GraphW<int> g;
 	assert(!g.addEdge(0, 1, 1.0));
-
+	assert(g.edgeCount() == 0);
 	g.addVertex(0);
 	g.addVertex(1);
 
@@ -90,21 +92,44 @@ void testAddEdge() {
 	w = 0;
 	assert(g.getEdge(a, b, w));
 	assert(w == WEIGHT);
+
+	assert(g.edgeCount() == 1);
 }
 
 void testRemoveEdge() {
-
+	GraphW<int> g;
+	const double WEIGHT = 1.0;
+	g.addVertex(0);
+	g.addVertex(1);
+	g.addVertex(2);
+	g.addEdge(0, 1, WEIGHT);
+	g.addEdge(1, 2, WEIGHT);
+	
+	double w = 0;
+	assert(g.removeEdge(0, 1));
+	assert(!g.hasEdge(0, 1));
+	assert(!g.getEdge(0, 1, w));
+	assert(w == 0);
 }
 
-// void testEdge(firenoo::GraphW<int>& g);
+void testSuite2() {
+	testDFS_CC();
+}
 
+void testDFS_CC() {
+	GraphW<int> g;
+	g.addVertex(0);
+	g.addVertex(1);
 
-
+	g.addEdge(0, 1, 1.0);
+	auto dfs = dfs_cc<int>(g);
+	assert(dfs.size() == 2);
+}
 
 }
 
 }
 int main() {
 	firenoo::test::testSuite1();
-
+	firenoo::test::testSuite2();
 }

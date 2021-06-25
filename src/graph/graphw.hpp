@@ -134,6 +134,25 @@ public:
 	 */
 	virtual bool hasEdge(const T&& v1, const T&& v2) const;
 
+	/*
+	 * Gets an iterator to an arbitrary vertex in this graph.
+	 * 
+	 * READ operation.
+	 * Returns:
+	 *  - a const_iterator that points to some pairing (T, GraphVertexW<T, W>*)
+	 *    in this graph.
+	 */
+	virtual typename std::unordered_map<T, GraphVertexW<T, W>*>::const_iterator begin() const;
+
+	/*
+	 * Gets the end iterator for the vertex set in this graph.
+	 * 
+	 * READ operation.
+	 * Returns:
+	 *  - a const_iterator that points to the end iterator.
+	 */
+	virtual typename std::unordered_map<T, GraphVertexW<T, W>*>::const_iterator end() const;
+
 // WRITE operations -----------------------------------------------------------
 
 	/*
@@ -530,6 +549,16 @@ bool firenoo::GraphW<T, W, Hash, KeyEq>::getEdge(const T&& v1, const T&& v2, W& 
 		return true;
 	}
 	return false;
+}
+
+template<class T, class W, class Hash, class KeyEq>
+typename std::unordered_map<T, GraphVertexW<T, W>*>::const_iterator firenoo::GraphW<T, W, Hash, KeyEq>::begin() const {
+	return _vertices.cbegin();
+}
+
+template<class T, class W, class Hash, class KeyEq>
+typename std::unordered_map<T, GraphVertexW<T, W>*>::const_iterator firenoo::GraphW<T, W, Hash, KeyEq>::end() const {
+	return _vertices.cend();
 }
 
 //WRITE operations ------------------------------------------------------------

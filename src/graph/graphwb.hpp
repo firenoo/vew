@@ -25,9 +25,9 @@ template<class T, class W = double, class Hash = std::hash<T>, class KeyEq = std
 class GraphWB : Graph<T, W, GraphVertexWB<T, W>> {
 
 private:
+
 	std::unordered_map<T, GraphVertexWB<T, W>*, Hash, KeyEq> _vertices;
 	size_t _edgeCount;
-
 public:
 	/*
 	 * Default constructor. Creates an empty graph with no vertices or edges.
@@ -187,6 +187,25 @@ public:
 	 *  - true if and only if the edge exists
 	 */
 	virtual bool getEdge(const T&& v1, const T&& v2, W& in) const;
+
+	/*
+	 * Gets an iterator to an arbitrary vertex in this graph.
+	 * 
+	 * READ operation.
+	 * Returns:
+	 *  - a const_iterator that points to some pairing (T, GraphVertexWB<T, W>*)
+	 *    in this graph.
+	 */
+	virtual typename std::unordered_map<T, GraphVertexWB<T, W>*>::const_iterator begin() const;
+
+	/*
+	 * Gets the end iterator for the vertex set in this graph.
+	 * 
+	 * READ operation.
+	 * Returns:
+	 *  - a const_iterator that points to the end iterator.
+	 */
+	virtual typename std::unordered_map<T, GraphVertexWB<T, W>*>::const_iterator end() const;
 
 // WRITE operations -----------------------------------------------------------
 
@@ -534,6 +553,16 @@ bool firenoo::GraphWB<T, W, Hash, KeyEq>::getEdge(const T&& v1, const T&& v2, W&
 		return true;
 	}
 	return false;
+}
+
+template<class T, class W, class Hash, class KeyEq>
+typename std::unordered_map<T, GraphVertexWB<T, W>*>::const_iterator firenoo::GraphWB<T, W, Hash, KeyEq>::begin() const{
+	return _vertices.cbegin();
+}
+
+template<class T, class W, class Hash, class KeyEq>
+typename std::unordered_map<T, GraphVertexWB<T, W>*>::const_iterator firenoo::GraphWB<T, W, Hash, KeyEq>::end() const {
+	return _vertices.cend();
 }
 
 //WRITE operations ------------------------------------------------------------
