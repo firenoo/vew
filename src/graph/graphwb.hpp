@@ -608,9 +608,10 @@ firenoo::GraphVertexWB<T, W>* firenoo::GraphWB<T, W, Hash, KeyEq>::removeVertex(
 	if(search == _vertices.end()) {
 		return nullptr;
 	}
-	search->second->clearEdges();
+	Vertex* vert = search->second;
+	vert->clearEdges();
 	_vertices.erase(search);
-	return search->second;
+	return vert;
 }
 
 template<class T, class W, class Hash, class KeyEq>
@@ -619,18 +620,20 @@ firenoo::GraphVertexWB<T, W>* firenoo::GraphWB<T, W, Hash, KeyEq>::removeVertex(
 	if(search == _vertices.end()) {
 		return nullptr;
 	}
-	search->second->clearEdges();
+	Vertex* vert = search->second;
+	vert->clearEdges();
 	_vertices.erase(search);
-	return search->second;
+	return vert;
 }
 
 template<class T, class W, class Hash, class KeyEq>
 bool firenoo::GraphWB<T, W, Hash, KeyEq>::removeVertex(Vertex* v) {
 	auto search = _vertices.find(v->get());
 	if(search != _vertices.end()) {
-		search->second->clearEdges();
+		Vertex* vert = search->second;
+		vert->clearEdges();
 		_vertices.erase(search);
-		delete search->second;
+		delete vert;
 		return true;
 	}
 	return false;
@@ -1350,9 +1353,10 @@ firenoo::GraphVertexWB<int, W>* firenoo::GraphWB<int, W>::removeVertex(const int
 	if(search == _vertices.end()) {
 		return nullptr;
 	}
-	search->second->clearEdges();
+	VertexI* vert = search->second;
+	vert->clearEdges();
 	_vertices.erase(search);
-	return search->second;
+	return vert;
 }
 
 template<class W>
@@ -1361,18 +1365,20 @@ firenoo::GraphVertexWB<int, W>* firenoo::GraphWB<int, W>::removeVertex(const int
 	if(search == _vertices.end()) {
 		return nullptr;
 	}
-	search->second->clearEdges();
+	VertexI* vert = search->second;
+	vert->clearEdges();
 	_vertices.erase(search);
-	return search->second;
+	return vert;
 }
 
 template<class W>
 bool firenoo::GraphWB<int, W>::removeVertex(VertexI* v) {
 	auto search = _vertices.find(v->get());
 	if(search != _vertices.end()) {
-		search->second->clearEdges();
+		VertexI* vert = search->second;
+		vert->clearEdges();
 		_vertices.erase(search);
-		delete search->second;
+		delete vert;
 		return true;
 	}
 	return false;

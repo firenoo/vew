@@ -123,8 +123,14 @@ void testDFS_CC() {
 	g.addVertex(1);
 
 	g.addEdge(0, 1, 1.0);
-	auto dfs = dfs_cc<int>(g);
+	auto dfs = dfs_cc<int>(g, {});
 	assert(dfs.size() == 1);
+	auto comp = *dfs[0];
+	assert(comp.size() == 2);
+	for(auto v : comp) {
+		assert(g.hasVertex(v->get()));
+	}
+	delete dfs[0];
 }
 
 } 
