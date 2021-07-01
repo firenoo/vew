@@ -1,7 +1,7 @@
 #ifndef _FN_PRESETS
 	#define _FN_PRESETS 0
-	#include "../graph/graphw.hpp"
-	#include "../graph/graphwb.hpp"
+	#include "../graph/udigraph.hpp"
+	#include "../graph/digraph.hpp"
 
 /*
  * Presets
@@ -15,55 +15,55 @@ namespace graphwb {
 	 * Constructs an undirected line graph with `n` vertices, with each
 	 * edge having weight `w`. Vertices are labeled `0` to `n-1`.
 	 */
-	GraphWB<int> line(int n, double w);
+	UndirectedGraph<int> line(int n, double w);
 
 	/*
 	 * Constructs a complete graph with `n` vertices, with each
 	 * edge having weight `w`.
 	 */
-	GraphWB<int> complete(int n, double w);
+	UndirectedGraph<int> complete(int n, double w);
 
 	/*
 	 * Constructs a cycle graph with `n` vertices, with each
 	 * edge having weight `w`.
 	 */
-	GraphWB<int> cycle(int n, double w);
+	UndirectedGraph<int> cycle(int n, double w);
 
 	/*
 	 * Constructs a lattice graph with `n*m` vertices, with each
 	 * edge having weight `w`.
 	 * Vertices are labeled `0` to `n*m-1`. 
 	 */
-	GraphWB<int> lattice(int n, int m, double w);
+	UndirectedGraph<int> lattice(int n, int m, double w);
 
 	/*
 	 * Constructs a torus graph with `n x m` vertices, with each
 	 * edge having weight `w`.
 	 */
-	GraphWB<int> torus(int n, int m, double w);
+	UndirectedGraph<int> torus(int n, int m, double w);
 
 	/*
 	 * Constructs a 3-cube graph. 8 vertices, 12 edges.
 	 */
-	GraphWB<int> cube3(double w);
+	UndirectedGraph<int> cube3(double w);
 
 	/*
 	 * Constructs the Petersen graph. 10 vertices, 15 edges.
 	 * Vertices are labeled 0-9.
 	 * Edges have weight `w`.
 	 */
-	GraphWB<int> petersen(double w);
+	UndirectedGraph<int> petersen(double w);
 
 	/*
 	 * Constructs the Chvátal graph. 12 vertices, 24 edges.
 	 * Vertices are labeled 0-11.
 	 * Edges have weight `w`.
 	 */
-	GraphWB<int> chavatal(double w);
+	UndirectedGraph<int> chavatal(double w);
 
 
-	GraphWB<int> line(int n, double w) {
-		GraphWB<int> g;
+	UndirectedGraph<int> line(int n, double w) {
+		UndirectedGraph<int> g;
 		for(int i = 0; i < n; ++i) {
 			g.addVertex(i);
 		}
@@ -73,8 +73,8 @@ namespace graphwb {
 		return g;
 	}
 
-	GraphWB<int> complete(int n, double w) {
-		GraphWB<int> g;
+	UndirectedGraph<int> complete(int n, double w) {
+		UndirectedGraph<int> g;
 		for(int i = 0; i < n; ++i) {
 			g.addVertex(i);
 		}
@@ -86,14 +86,14 @@ namespace graphwb {
 		return g;
 	}
 
-	GraphWB<int> cycle(int n, double w) {
-		GraphWB<int> g = line(n, w);
+	UndirectedGraph<int> cycle(int n, double w) {
+		UndirectedGraph<int> g = line(n, w);
 		g.addEdge(0, n-1, w);
 		return g;
 	}
 
-	GraphWB<int> lattice(int n, int m, double w) {
-		GraphWB<int> g ;
+	UndirectedGraph<int> lattice(int n, int m, double w) {
+		UndirectedGraph<int> g ;
 		for(int i = 0; i < n * m; ++i) {
 			g.addVertex(i);
 		}
@@ -108,8 +108,8 @@ namespace graphwb {
 		return g;
 	}
 
-	GraphWB<int> torus(int n, int m, double w) {
-		GraphWB<int> g = lattice(n, m, w);
+	UndirectedGraph<int> torus(int n, int m, double w) {
+		UndirectedGraph<int> g = lattice(n, m, w);
 		for(int i = 0; i < m; ++i) {
 			//loop around - horizontal
 			g.addEdge(i * n, (i + 1) * n - 1, w);
@@ -121,8 +121,8 @@ namespace graphwb {
 		return g;
 	}
 
-	GraphWB<int> cube3(double w) {
-		GraphWB<int> g;
+	UndirectedGraph<int> cube3(double w) {
+		UndirectedGraph<int> g;
 		for(int i = 0; i < 8; ++i) {
 			g.addVertex(i);
 		}
@@ -141,8 +141,8 @@ namespace graphwb {
 		return g;
 	}
 
-	GraphWB<int> petersen(double w) {
-		GraphWB<int> g;
+	UndirectedGraph<int> petersen(double w) {
+		UndirectedGraph<int> g;
 		g.clear();
 		for(unsigned int i = 0; i < 10; ++i) {
 			g.addVertex(i);
@@ -165,8 +165,8 @@ namespace graphwb {
 		return g;
 	}
 	
-	GraphWB<int> chavatal(double w) {
-		GraphWB<int> g;
+	UndirectedGraph<int> chavatal(double w) {
+		UndirectedGraph<int> g;
 		g.clear();
 		for(unsigned int i = 0; i < 12; ++i) {
 			g.addVertex(i);

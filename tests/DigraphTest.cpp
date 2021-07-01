@@ -2,7 +2,7 @@
 #include <exception>
 #include <cassert>
 #include <iostream>
-#include "graphw.hpp"
+#include "digraph.hpp"
 #include "presets.hpp"
 #include "search.hpp"
 namespace firenoo {
@@ -16,8 +16,8 @@ void testAddVertex();
 void testRemoveVertex();
 void testAddEdge();
 void testRemoveEdge();
-void testDFS_CC();
-
+void testdfs_cc();
+void testdfs_full();
 /*
  * Test Suite 1 - basic functions
  * - add vertex
@@ -34,7 +34,7 @@ void testSuite1() {
 }
 
 void testAddVertex() {
-	GraphW<int> g;
+	DirectedGraph<int> g;
 	for(size_t i = 0; i < 100; ++i) {
 		g.addVertex(static_cast<int>(i)); //test &
 	}
@@ -48,7 +48,7 @@ void testAddVertex() {
 }
 
 void testRemoveVertex() {
-	GraphW<int> g;
+	DirectedGraph<int> g;
 	for(size_t i = 0; i < 50; ++i) {
 		g.addVertex(static_cast<int>(i));
 	}
@@ -64,7 +64,7 @@ void testRemoveVertex() {
 }
 
 void testAddEdge() {
-	GraphW<int> g;
+	DirectedGraph<int> g;
 	assert(!g.addEdge(0, 1, 1.0));
 	assert(g.edgeCount() == 0);
 	g.addVertex(0);
@@ -96,7 +96,7 @@ void testAddEdge() {
 }
 
 void testRemoveEdge() {
-	GraphW<int> g;
+	DirectedGraph<int> g;
 	const double WEIGHT = 1.0;
 	g.addVertex(0);
 	g.addVertex(1);
@@ -112,11 +112,28 @@ void testRemoveEdge() {
 }
 
 void testSuite2() {
-	testDFS_CC();
+	testdfs_cc();
+	testdfs_full();
 }
 
-void testDFS_CC() {
-	GraphW<int> g;
+void testdfs_cc() {
+	DirectedGraph<int> g;
+	g.addVertex(0);
+	g.addVertex(1);
+
+	g.addEdge(0, 1, 1.0);
+	auto dfs = dfs_cc<int>(g, {});
+	assert(dfs.size() == 1);
+	auto comp = *dfs[0];
+	assert(comp.size() == 2);
+	for(auto v : comp) {
+		assert(g.hasVertex(v->get()));
+	}
+	delete dfs[0];
+}
+
+void testdfs_full() {
+	DirectedGraph<int> g;
 	g.addVertex(0);
 	g.addVertex(1);
 

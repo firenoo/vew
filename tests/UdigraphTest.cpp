@@ -2,7 +2,7 @@
 #include <exception>
 #include <cassert>
 #include <iostream>
-#include "graphwb.hpp"
+#include "udigraph.hpp"
 #include "presets.hpp"
 #include "search.hpp"
 namespace firenoo {
@@ -34,7 +34,7 @@ void testSuite1() {
 }
 
 void testAddVertex() {
-	GraphWB<int> g;
+	UndirectedGraph<int> g;
 	for(size_t i = 0; i < 100; ++i) {
 		g.addVertex(static_cast<int>(i)); //test &
 	}
@@ -48,7 +48,7 @@ void testAddVertex() {
 }
 
 void testRemoveVertex() {
-	GraphWB<int> g;
+	UndirectedGraph<int> g;
 	for(size_t i = 0; i < 50; ++i) {
 		g.addVertex(static_cast<int>(i));
 	}
@@ -64,7 +64,7 @@ void testRemoveVertex() {
 }
 
 void testAddEdge() {
-	GraphWB<int> g;
+	UndirectedGraph<int> g;
 	assert(!g.addEdge(0, 1, 1.0));
 	assert(g.edgeCount() == 0);
 	g.addVertex(0);
@@ -98,7 +98,7 @@ void testAddEdge() {
 }
 
 void testRemoveEdge() {
-	GraphWB<int> g;
+	UndirectedGraph<int> g;
 	const double WEIGHT = 1.0;
 	g.addVertex(0);
 	g.addVertex(1);
@@ -118,7 +118,7 @@ void testSuite2() {
 }
 
 void testDFS_CC() {
-	GraphWB<int> g;
+	UndirectedGraph<int> g;
 	g.addVertex(0);
 	g.addVertex(1);
 

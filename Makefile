@@ -6,8 +6,8 @@ INC = -Isrc/graph -Isrc/algorithm
 DEST = out
 SRC = src
 
-TEST = out/tests/GraphWTest.o out/tests/GraphWBTest.o
-_LIBGRAPH = graphw.hpp vertexw.hpp
+TEST = out/tests/DigraphTest.o out/tests/UdigraphTest.o
+_LIBGRAPH = digraph.hpp vertexw.hpp
 _ALGOS = presets.hpp search.hpp
 LIBGRAPH = $(_LIBGRAPH:%=$(SRC)/graph/%)
 ALGOS = $(_ALGOS:%=$(SRC)/algorithm/%)
@@ -15,6 +15,8 @@ all: clean test
 
 test: $(TEST)
 
+Example.o : tests/Example.cpp
+	$(CXX) -o $@ $(CXXFLAGS) $<
 
 # $(TEST): $(_TESTS) $(_LIBGRAPH)
 # 	$(CXX) -o $@ $(CXXFLAGS) $(INC) $< $(LIBGRAPH)

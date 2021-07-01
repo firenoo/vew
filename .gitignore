@@ -5,3 +5,5 @@ workspace.code-workspace
 #Compiled files
 /out/
 **.o
+
+tests/Example.cpp
