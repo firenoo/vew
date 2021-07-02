@@ -171,10 +171,16 @@ namespace firenoo {
 		while(!work_stack.empty()) {
 			//DFS search loop
 			DVert info = work_stack.top(); //copy?
-			info._pre = order++; //Adjust preorder
-			visited[info] = component; //Mark as visited
-			//Expand node
 			Vertex* v = info._vertex;
+			if(visited.find(v) != visited.end()) {
+				//We've already visited this vertex; it's either
+				//already in the stack or in the result.
+				work_stack.pop();
+				continue;
+			}
+			info._pre = order++; //Adjust preorder
+			visited[v] = component; //Mark as visited
+			//Expand node
 			bool bt = true; //pessimistic backtrack flag
 			auto n = v->neighbors();
 			while(n != v->neighborsEnd()) {
@@ -210,9 +216,9 @@ namespace firenoo {
 				++n;
 			}
 			if(bt) {
-				//Dead end, backtrack
+				//There were no options, backtrack
 				info._post = order++;
-				component->insert(std::move(info)); //insert at the end.
+				component->insert(std::move(info)); //insert vertex to result.
 				work_stack.pop();
 			}
 		}
@@ -315,14 +321,88 @@ namespace firenoo {
 		}
 		return result;
 	}
+
+	#define FComp std::unordered_set<DFSResult<GraphVertexWB<T, W>>>
+	#define DVert DFSResult<GraphVertexWB<T, W>>
+	template<class T, class W>
+	static void dfs_explore_full(std::stack<DVert>& work_stack, std::unordered_map<Vertex*, FComp*>& visited, std::vector<FComp>& result, size_t& order) {
+		//"Uptree"
+		FComp* component = new FComp();				
+		bool addComponent = true;
+		while(!work_stack.empty()) {
+			//DFS search loop
+			DVert info = work_stack.top(); //copy?
+			Vertex* v = info._vertex;
+			if(visited.find(v) != visited.end()) {
+				//We've already visited this vertex; it's either
+				//already in the stack or in the result.
+				work_stack.pop();
+				continue;
+			}
+			info._pre = order++; //Adjust preorder
+			visited[v] = component; //Mark as visited
+			//Expand node
+			bool bt = true; //pessimistic backtrack flag
+			auto n = v->neighbors();
+			while(n != v->neighborsEnd()) {
+				//Look if neighbor was already visited
+				auto old_component = visited.find(v);
+				if(old_component == visited.end()) {
+					//Neighbor not already visited, add to stack
+					work_stack.emplace(0, 0, old_component->first);
+					bt = false;
+				}
+				++n;
+			}
+			if(bt) {
+				//Dead end, backtrack
+				info._post = order++;
+				component->insert(std::move(info)); //insert at the end.
+				work_stack.pop();
+			}
+		}
+		if(addComponent) {
+			result.push_back(component);
+		}
+	}
+
+	template<class T, class W>
+	std::vector<FComp*> dfs_full(const Graph& g, std::initializer_list<GraphVertexW<T, W>*> args) {
+		std::vector<FComp*> result;
+		if(g.vertexCount() == 0) {
+			return result;
+		}
+		size_t order = 0;
+		std::stack<DVert*> work_stack;
+		std::unordered_map<Vertex*, FComp*> visited;
+		
+		if(args.size() > 0) {
+			for(Vertex* v : args) {
+				if(!g.hasVertex(v->get()) || visited.find(v) != visited.end()) continue;
+				work_stack.emplace(0, 0, v);
+				dfs_explore_full(work_stack, visited, result, order);
+			}
+		}
+		auto iter = g.begin();
+		while(iter != g.end()) {
+			//Main loop
+			DVert* vert = iter->second; //top-level vertex
+			if(visited.find(vert) == visited.end()) {
+				//Start a new DFS tree
+				work_stack.push(vert);
+				dfs_explore_full(work_stack, visited, result, order);
+			}
+			++iter;
+		}
+		return result;
+	}
+	#undef DVert
+	#undef FComp
+
+
 	#undef Component
 	#undef Vertex
 	#undef Graph
-
-
-
-
-
 }
 
 #endif

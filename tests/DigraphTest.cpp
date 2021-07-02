@@ -18,6 +18,7 @@ void testAddEdge();
 void testRemoveEdge();
 void testdfs_cc();
 void testdfs_full();
+void testReversal();
 /*
  * Test Suite 1 - basic functions
  * - add vertex
@@ -146,6 +147,23 @@ void testdfs_full() {
 		assert(g.hasVertex(v->get()));
 	}
 	delete dfs[0];
+}
+
+void testReversal(){
+	DirectedGraph<int> g;
+	const double WEIGHT = 0;
+	g.addVertex(0);
+	g.addVertex(1);
+	g.addVertex(2);
+
+	g.addEdge(0, 1, WEIGHT);
+	g.addEdge(0, 2, WEIGHT);
+	g.addEdge(1, 2, WEIGHT);
+
+	DirectedGraph<int> gr = g.r();
+	assert(gr.hasEdge(1, 0));
+	assert(gr.hasEdge(2, 1));
+	assert(gr.hasEdge(2, 0));
 }
 
 }

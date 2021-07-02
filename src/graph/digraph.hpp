@@ -1,5 +1,6 @@
 #ifndef _FN_GRAPHW
     #define _FN_GRAPHW 0
+	#include <stack>
 	#include "vertexw.hpp"
 	#include "graph.hpp"
 /*
@@ -37,6 +38,41 @@ public:
 	 */
 	~DirectedGraph() {
 		Graph::clear();
+	}
+// READ operation
+
+	/*
+	 * Creates a clone of this graph, reverses the clone's edges, and returns
+	 * the result.
+	 */
+virtual DirectedGraph r() {
+		DirectedGraph result;
+		if(Graph::vertexCount() <= 0) return result;
+		//Run DFS, adding edges as we go.
+		std::stack<Vertex*> work_stack;
+		std::unordered_set<Vertex*> visited;
+		for(auto iter : Graph::_vertices) {
+			work_stack.push(iter.second);
+			result.addVertex(iter.second);
+			while(!work_stack.empty()) {
+				Vertex* vertex = work_stack.top();
+				work_stack.pop();
+				if(visited.find(vertex) != visited.end()) continue;
+				visited.insert(vertex);
+				auto i = vertex->neighbors();
+				while(i != vertex->neighborsEnd()) {
+					if(visited.find(i->first) == visited.end()) {
+						work_stack.push(i->first);
+						result.addVertex(i->first);
+					}
+					W w;
+					vertex->getEdge(i->first, w);
+					result.addEdge(i->first->get(), vertex->get(), w);
+					++i;
+				}
+			}
+		}
+		return result;		
 	}
 
 
@@ -188,7 +224,41 @@ public:
 	~DirectedGraph() {
 		Graph::clear();
 	}
+//READ operation
 
+	/*
+	 * Creates a clone of this graph, reverses the clone's edges, and returns
+	 * the result.
+	 */
+	virtual DirectedGraph r() {
+		DirectedGraph result;
+		if(Graph::vertexCount() <= 0) return result;
+		//Run DFS, adding edges as we go.
+		std::stack<Vertex*> work_stack;
+		std::unordered_set<Vertex*> visited;
+		for(auto iter : Graph::_vertices) {
+			work_stack.push(iter.second);
+			result.addVertex(iter.second);
+			while(!work_stack.empty()) {
+				Vertex* vertex = work_stack.top();
+				work_stack.pop();
+				if(visited.find(vertex) != visited.end()) continue;
+				visited.insert(vertex);
+				auto i = vertex->neighbors();
+				while(i != vertex->neighborsEnd()) {
+					if(visited.find(i->first) == visited.end()) {
+						work_stack.push(i->first);
+						result.addVertex(i->first);
+					}
+					W w;
+					vertex->getEdge(i->first, w);
+					result.addEdge(i->first->get(), vertex->get(), w);
+					++i;
+				}
+			}
+		}
+		return result;		
+	}
 
 // WRITE operations -----------------------------------------------------------
 

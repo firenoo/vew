@@ -9,7 +9,7 @@
  */
 namespace firenoo {
 
-namespace graphwb {
+namespace undirected {
 
 	/*
 	 * Constructs an undirected line graph with `n` vertices, with each
