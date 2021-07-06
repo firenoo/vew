@@ -43,9 +43,13 @@ public:
 
 	/*
 	 * Creates a clone of this graph, reverses the clone's edges, and returns
-	 * the result.
+	 * the clone.
+	 * 
+	 * Returns:
+	 *  - A directed graph that contains all vertices of this graph but
+	 *    its edges are all reversed.
 	 */
-virtual DirectedGraph r() {
+	virtual DirectedGraph r() const {
 		DirectedGraph result;
 		if(Graph::vertexCount() <= 0) return result;
 		//Run DFS, adding edges as we go.
@@ -61,11 +65,13 @@ virtual DirectedGraph r() {
 				visited.insert(vertex);
 				auto i = vertex->neighbors();
 				while(i != vertex->neighborsEnd()) {
+					//Expand vertices
 					if(visited.find(i->first) == visited.end()) {
 						work_stack.push(i->first);
 						result.addVertex(i->first);
 					}
 					W w;
+					//Edge reversal
 					vertex->getEdge(i->first, w);
 					result.addEdge(i->first->get(), vertex->get(), w);
 					++i;
@@ -74,7 +80,6 @@ virtual DirectedGraph r() {
 		}
 		return result;		
 	}
-
 
 // WRITE operations -----------------------------------------------------------
 
@@ -204,7 +209,6 @@ virtual DirectedGraph r() {
  * default.
  * 
  * Template args:
- * T - type
  * W - weight type.
  * Hash - class that contains a hash function, see std::hash
  * KeyEq - class that contains eq function, see std::equal_to
