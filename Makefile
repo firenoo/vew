@@ -1,6 +1,6 @@
 # use g++
 CXX = g++
-CXXFLAGS ?= -Wall -pedantic -g -O0
+CXXFLAGS ?= -Wall -pedantic -g -O0 -std=c++17
 RM ?= rm -f
 INC = -Isrc/graph -Isrc/algorithm
 DEST = out

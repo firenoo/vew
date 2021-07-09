@@ -19,6 +19,7 @@ void testRemoveEdge();
 void testdfs_cc();
 void testdfs_full();
 void testReversal();
+void test_top_sort();
 /*
  * Test Suite 1 - basic functions
  * - add vertex
@@ -164,6 +165,23 @@ void testReversal(){
 	assert(gr.hasEdge(1, 0));
 	assert(gr.hasEdge(2, 1));
 	assert(gr.hasEdge(2, 0));
+}
+
+void test_top_sort() {
+	DirectedGraph<int> g;
+	const double WEIGHT = 0;
+	for(unsigned int i = 0; i < 10; ++i) {
+		g.addVertex(i);
+	}
+	for(unsigned int i = 0; i < 9; ++i) {
+		g.addEdge(i, i+1, WEIGHT);
+	}
+	auto sort = firenoo::top_sort(g);
+	int i = 0;
+	for(auto it = sort.begin(); it != sort.end(); ++it) {
+		assert(it->_vertex->get() == i);
+		i++;
+	}
 }
 
 }

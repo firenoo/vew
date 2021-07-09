@@ -1,16 +1,58 @@
 #ifndef _FN_SEARCH
 	#define _FN_SEARCH 0
+	#include <cstdint>
 	#include <vector>
 	#include <stack>
+	#include <algorithm>
 	#include "udigraph.hpp"
 	#include "digraph.hpp"
+	//Directed Graph
+	#define DGraph DirectedGraph<T, W>
+	//Directed Graph Vertex
+	#define DVertex GraphVertexW<T, W>
+	//Directed Graph Component
+	#define DComponent std::unordered_set<GraphVertexW<T, W>*>
+	//Directed Graph DFS Component
+	#define DFullComp std::unordered_set<DFSResult<GraphVertexW<T, W>>, DFSHash<GraphVertexW<T, W>>>
+	//Directed Graph DFS Result
+	#define DDFSResult DFSResult<GraphVertexW<T, W>>
+
+
+	//Undirected Graph
+	#define UGraph UndirectedGraph<T, W>
+	#define UVertex GraphVertexWB<T, W>
+	#define UComponent std::unordered_set<GraphVertexWB<T, W>*>
+	#define UFullComp std::unordered_set<DFSResult<GraphVertexWB<T, W>>, DFSHash<GraphVertexWB<T, W>>>
+	#define UDFSResult DFSResult<GraphVertexWB<T, W>>
+
 namespace firenoo {
+
+
 
 	/*
 	 * The result of DFS searching. Includes pre- and post- numbers. 
 	 */
 	template<typename Vertex>
 	struct DFSResult {
+		
+		DFSResult(size_t pre, size_t post, Vertex* vertex) : 
+			_pre(pre), 
+			_post(post),
+			_vertex(vertex) {}
+		
+		DFSResult(const DFSResult& other) :
+			_pre(other._pre),
+			_post(other._post),
+			_vertex(other._vertex) {}
+		
+
+		DFSResult(DFSResult&& other) {
+			_pre = other._pre;
+			_post = other._post;
+			_vertex = other._vertex;
+
+			other._vertex = nullptr;
+		}
 
 		/*
 		 * Pre-numbering
@@ -23,11 +65,64 @@ namespace firenoo {
 		size_t _post = 0;
 
 		/*
-		 * Vertex
+		 * Vertex. Do not delete, as we do not own this pointer.
 		 */
 		Vertex* _vertex = nullptr;
 
+		DFSResult& operator=(const DFSResult<Vertex>& other) noexcept {
+			if(this != &other) {
+				_pre = other._pre;
+				_post = other._post;
+				_vertex = other._vertex;
+			}
+			return *this;
+		}
+
+		DFSResult& operator=(DFSResult<Vertex>&& other) noexcept {
+			if(this != &other) {
+				_pre = other._pre;
+				_post = other._post;
+				_vertex = other._vertex;
+
+				other._pre = 0;
+				other._post = 0;
+				other._vertex = nullptr;
+			}
+			return *this;
+		}
+
+		bool operator==(const DFSResult<Vertex>& b) const noexcept {
+			return _pre == b._pre && _post == b._post && _vertex == b._vertex;
+		}
+
 	};
+
+	template <class T, bool Reverse = false>
+	struct DFSPostCompare {};
+
+	template <class T>
+	struct DFSPostCompare<T, true> {
+		bool operator()(DFSResult<T>& a, DFSResult<T>& b) noexcept {
+			return a._post > b._post;
+		}
+	};
+
+	template<class T>
+	struct DFSPostCompare<T, false> {
+		bool operator()(DFSResult<T>& a, DFSResult<T>& b) noexcept {
+			return a._post < b._post;
+		}
+	};
+
+	template<class T>
+	struct DFSHash {
+		size_t operator()(const DFSResult<T>& d) const noexcept {
+			return ((d._pre ^ reinterpret_cast<std::uintptr_t>(d._vertex) ) << 32) | 
+			       (d._post ^ reinterpret_cast<std::uintptr_t>(d._vertex));
+		}
+	};
+
+// Directed Graph Search Functions --------------------------------------------
 
 	/*
 	 * Perform depth-first search, keeping only information about
@@ -47,19 +142,7 @@ namespace firenoo {
 	 *    responsibility to manage it.
 	 */ 
 	template<class T, class W>
-	std::vector<std::unordered_set<GraphVertexW<T, W>*>*> dfs_cc(const DirectedGraph<T, W>& g, std::initializer_list<GraphVertexW<T, W>*> args);
-	/*
-	 * Perform depth-first search, keeping only information about
-	 * connected components. Starts on an arbitrary vertex.
-	 * READ operation.
-	 * Parameters:
-	 *  - g : A UndirectedGraph instance (weighted, undirected graph)
-	 * Returns:
-	 *  - A std::vector, each element being another std::vector (a component)
-	 *    of vertices that are connected (in no particular order)
-	 */ 
-	template<class T, class W>
-	std::vector<std::unordered_set<GraphVertexWB<T, W>*>*> dfs_cc(const UndirectedGraph<T, W>& g, std::initializer_list<GraphVertexWB<T, W>*> args);
+	std::vector<DComponent*> dfs_cc(const DGraph& g, std::initializer_list<DVertex*> args);
 
 	/*
 	 * Perform depth-first search, retaining information about 
@@ -72,23 +155,73 @@ namespace firenoo {
 	 *  - A std::vector, each element being a vector
 	 */ 
 	template<class T, class W>
-	std::vector<std::unordered_set<DFSResult<GraphVertexW<T,W>*>>> dfs_full(const DirectedGraph<T,W>& g, std::initializer_list<GraphVertexW<T, W>*> args);
+	std::vector<DFullComp*> dfs_full(const DGraph& g, std::initializer_list<DVertex*> args);
+
+
+	/*
+	 * Finds whether there is a cycle in the graph.
+	 *
+	 * READ operation.
+	 * Parameters:
+	 *  - g : A DirectedGraph instance (weighted, directed graph)
+	 * Returns:
+	 *  - true if and only if there exists a cycle in the graph
+	 */
+	template<class T, class W>
+	bool has_cycle(const DGraph& g);
+
+	/*
+	 * Returns a topological sort of the graph.
+	 *
+	 * READ operation.
+	 * Parameters:
+	 *  - g : A DirectedGraph instance (weighted, directed graph)
+	 * Returns:
+	 *  - true if and only if there exists a cycle in the graph
+	 */
+	template<class T, class W>
+	std::vector<DDFSResult> top_sort(const DGraph& g);
+
+	/*
+	 * Perform depth-first search, keeping only information about
+	 * connected components. Starts on an arbitrary vertex.
+	 * READ operation.
+	 * Parameters:
+	 *  - g : A UndirectedGraph instance (weighted, undirected graph)
+	 * Returns:
+	 *  - A std::vector, each element being another std::vector (a component)
+	 *    of vertices that are connected (in no particular order)
+	 */ 
+	template<class T, class W>
+	std::vector<UComponent*> dfs_cc(const UGraph& g, std::initializer_list<UVertex*> args);
+
+	/*
+	 * Perform depth-first search, retaining information about 
+	 * post/pre-numbers. Starts on an arbitrary vertex.
+	 * 
+	 * READ operation.
+	 * Parameters:
+	 *  - g : An UndirectedGraph instance (weighted, directed graph)
+	 * Returns:
+	 *  - A std::vector, each element being a vector
+	 */ 
+	template<class T, class W>
+	std::vector<UFullComp*> dfs_full(const UGraph& g, std::initializer_list<UVertex*> args);
+
 
 //-----------------------------------------------------------------------------
 
+// Directed Graphs
 
-	#define Graph DirectedGraph<T, W>
-	#define Vertex GraphVertexW<T, W>
-	#define Component std::unordered_set<GraphVertexW<T, W>*>
-
+	//Helper function. Explores the current component.
 	template<class T, class W>
-	static void dfs_explore(std::stack<Vertex*>& work_stack, std::unordered_map<Vertex*, Component*>& visited, std::vector<Component*>& result) {
-		//"Uptree"
-		Component* component = new Component();				
+	static void dfs_explore(std::stack<DVertex*>& work_stack, std::unordered_map<DVertex*, DComponent*>& visited, std::vector<DComponent*>& result) {
+		//Uptree
+		DComponent* component = new DComponent();				
 		bool addComponent = true;
 		while(!work_stack.empty()) {
 			//DFS search loop
-			Vertex* vertex = work_stack.top();
+			DVertex* vertex = work_stack.top();
 			work_stack.pop();
 			if(visited.find(vertex) != visited.end()) continue;
 			visited[vertex] = component; //Mark as visited
@@ -104,12 +237,12 @@ namespace firenoo {
 				} else if(old_component->second != component) {
 					//Neighbor visited already, and is in a different
 					//component. Must bridge the two components.
-					Component* other = old_component->second;
+					DComponent* other = old_component->second;
 					//Add all vertices to the larger of the two
 					//components, and set it to be the new
 					//current component.
 					if(other->size() >= component->size()) {
-						for(Vertex* v : *component) {
+						for(DVertex* v : *component) {
 							visited[v] = other;
 							other->insert(v);
 						}								
@@ -117,7 +250,7 @@ namespace firenoo {
 						component = other;
 						addComponent = false;
 					} else {
-						for(Vertex* v : *other) {
+						for(DVertex* v : *other) {
 							visited[v] = component;
 							component->insert(v);
 						}								
@@ -129,20 +262,21 @@ namespace firenoo {
 		}
 		if(addComponent) {
 			result.push_back(component);
-		}	
+		}
 	}
 
 	template<class T, class W>
-	std::vector<Component*> dfs_cc(const Graph& g, std::initializer_list<Vertex*> args) {
-		std::vector<Component*> result;
+	std::vector<DComponent*> dfs_cc(const DGraph& g, std::initializer_list<DVertex*> args) {
+		std::vector<DComponent*> result;
+		result.reserve(g.vertexCount());
 		if(g.vertexCount() == 0) {
 			return result;
 		}
-		std::stack<Vertex*> work_stack;
-		std::unordered_map<Vertex*, Component*> visited;
+		std::stack<DVertex*> work_stack;
+		std::unordered_map<DVertex*, DComponent*> visited;
 		
 		if(args.size() > 0) {
-			for(Vertex* v : args) {
+			for(DVertex* v : args) {
 				if(!g.hasVertex(v->get()) || visited.find(v) != visited.end()) continue;
 				work_stack.push(v);
 				dfs_explore(work_stack, visited, result);
@@ -151,7 +285,7 @@ namespace firenoo {
 		auto iter = g.begin();
 		while(iter != g.end()) {
 			//Main loop
-			Vertex* vert = iter->second; //top-level vertex
+			DVertex* vert = iter->second; //top-level vertex
 			if(visited.find(vert) == visited.end()) {
 				//Start a new DFS tree
 				work_stack.push(vert);
@@ -161,17 +295,15 @@ namespace firenoo {
 		}
 		return result;
 	}
-	#define FComp std::unordered_set<DFSResult<GraphVertexW<T, W>>>
-	#define DVert DFSResult<GraphVertexW<T, W>>
 	template<class T, class W>
-	static void dfs_explore_full(std::stack<DVert>& work_stack, std::unordered_map<Vertex*, FComp*>& visited, std::vector<FComp>& result, size_t& order) {
+	static void dfs_explore_full(std::stack<DDFSResult>& work_stack, std::unordered_map<DVertex*, DFullComp*>& visited, std::vector<DFullComp*>& result, size_t& order) {
 		//"Uptree"
-		FComp* component = new FComp();				
+		DFullComp* component = new DFullComp();				
 		bool addComponent = true;
 		while(!work_stack.empty()) {
 			//DFS search loop
-			DVert info = work_stack.top(); //copy?
-			Vertex* v = info._vertex;
+			DDFSResult info = work_stack.top(); //copy?
+			DVertex* v = info._vertex;
 			if(visited.find(v) != visited.end()) {
 				//We've already visited this vertex; it's either
 				//already in the stack or in the result.
@@ -193,12 +325,12 @@ namespace firenoo {
 				} else if(old_component->second != component) {
 					//Neighbor visited already, and is in a different
 					//component. Must bridge the two components.
-					FComp* other = old_component->second;
+					DFullComp* other = old_component->second;
 					//Add all vertices to the larger of the two
 					//components, and set it to be the new
 					//current component.
 					if(other->size() >= component->size()) {
-						for(DVert dv : *component) {
+						for(DDFSResult dv : *component) {
 							visited[dv._vertex] = other;
 							other->insert(dv);
 						}								
@@ -206,9 +338,9 @@ namespace firenoo {
 						component = other;
 						addComponent = false;
 					} else {
-						for(Vertex* v : *other) {
-							visited[v] = component;
-							component->insert(v);
+						for(DDFSResult dv : *other) {
+							visited[dv._vertex] = component;
+							component->insert(dv);
 						}								
 						delete other;
 					}
@@ -228,17 +360,18 @@ namespace firenoo {
 	}
 
 	template<class T, class W>
-	std::vector<FComp*> dfs_full(const Graph& g, std::initializer_list<GraphVertexW<T, W>*> args) {
-		std::vector<FComp*> result;
+	std::vector<DFullComp*> dfs_full(const DGraph& g, std::initializer_list<DVertex*> args) {
+		std::vector<DFullComp*> result;
+		result.reserve(g.vertexCount());
 		if(g.vertexCount() == 0) {
 			return result;
 		}
 		size_t order = 0;
-		std::stack<DVert*> work_stack;
-		std::unordered_map<Vertex*, FComp*> visited;
+		std::stack<DDFSResult> work_stack;
+		std::unordered_map<DVertex*, DFullComp*> visited;
 		
 		if(args.size() > 0) {
-			for(Vertex* v : args) {
+			for(DVertex* v : args) {
 				if(!g.hasVertex(v->get()) || visited.find(v) != visited.end()) continue;
 				work_stack.emplace(0, 0, v);
 				dfs_explore_full(work_stack, visited, result, order);
@@ -247,32 +380,88 @@ namespace firenoo {
 		auto iter = g.begin();
 		while(iter != g.end()) {
 			//Main loop
-			DVert* vert = iter->second; //top-level vertex
+			DVertex* vert = iter->second; //top-level vertex
 			if(visited.find(vert) == visited.end()) {
 				//Start a new DFS tree
-				work_stack.push(vert);
+				work_stack.emplace(order, 0, vert);
 				dfs_explore_full(work_stack, visited, result, order);
 			}
 			++iter;
 		}
 		return result;
 	}
-	#undef DVert
-	#undef FComp
-	#undef Component
-	#undef Vertex
-	#undef Graph
-
-	#define Graph UndirectedGraph<T, W>
-	#define Vertex GraphVertexWB<T, W>
-	#define Component std::unordered_set<GraphVertexWB<T, W>*>
 
 	template<class T, class W>
-	static void dfs_explore(std::stack<Vertex*>& work_stack, std::unordered_map<Vertex*, Component*>& visited, std::vector<Component*>& result) {
-		Component* component = new Component();
+	static bool dfs_explore_cycle(std::stack<DVertex*>& work_stack, std::unordered_set<DVertex*>& visited) {
 		while(!work_stack.empty()) {
 			//DFS search loop
-			Vertex* vertex = work_stack.top();
+			DVertex* vertex = work_stack.top();
+			work_stack.pop();
+			if(visited.find(vertex) != visited.end()) continue;
+			visited.insert(vertex); //Mark as visited
+			//Iterate through neighbors
+			auto n = vertex->neighbors();
+			while(n != vertex->neighborsEnd()) {
+				//Look if neighbor was already visited
+				if(visited.find(n->first) == visited.end()) {
+					//Expand neighbor
+					work_stack.push(n->first);
+				} else {
+					//Found a cycle
+					return true;
+				}
+				++n;
+			}
+		}
+		return false;
+	}
+
+	template<class T, class W>
+	bool has_cycle(const DGraph& g) {
+		//Strategy: perform dfs from all vertices; if we encounter a vertex
+		//that we visited already, we found a cycle
+		std::stack<DVertex*> work_stack;
+		std::unordered_set<DVertex*> visited;
+		auto iter = g.begin();
+		while(iter != g.end()) {
+			if(visited.find(iter->second) == visited.end()) {
+				work_stack.push(iter->second);
+				if(dfs_explore_cycle(work_stack, visited)) {
+					return true;
+				}
+			}
+			++iter;
+		}
+		return false;
+	}
+
+	template<class T, class W>
+	std::vector<DDFSResult> top_sort(const DGraph& g) {
+		std::vector<DDFSResult> result;
+		result.reserve(g.vertexCount());
+		std::vector<DFullComp*> dfs_result = dfs_full(g, {});
+		for(DFullComp* c : dfs_result) {
+			for(auto iter = c->begin(); iter != c->end(); ++iter) {
+				result.push_back(std::move(c->extract(iter).value()));
+			}
+		}
+		//Sort by post-order
+		DFSPostCompare<DVertex, true> cmp;
+		std::sort(result.begin(), result.end(), cmp);
+		return result;
+	}
+
+
+//-----------------------------------------------------------------------------
+// Undirected Graphs
+
+
+	template<class T, class W>
+	static void dfs_explore(std::stack<UVertex*>& work_stack, std::unordered_map<UVertex*, UComponent*>& visited, std::vector<UComponent*>& result) {
+		UComponent* component = new UComponent();
+		while(!work_stack.empty()) {
+			//DFS search loop
+			UVertex* vertex = work_stack.top();
 			work_stack.pop();
 			if(visited.find(vertex) != visited.end()) continue;
 			visited[vertex] = component; //Mark as visited
@@ -292,17 +481,17 @@ namespace firenoo {
 		result.push_back(component);
 	}
 	template<class T, class W>
-	std::vector<Component*> dfs_cc(const Graph& g, std::initializer_list<Vertex*> args) {
-		std::vector<Component*> result;
+	std::vector<UComponent*> dfs_cc(const UGraph& g, std::initializer_list<UVertex*> args) {
+		std::vector<UComponent*> result;
 		if(g.vertexCount() == 0) {
 			return result;
 		}
 		
-		std::stack<Vertex*> work_stack;
-		std::unordered_map<Vertex*, Component*> visited;
+		std::stack<UVertex*> work_stack;
+		std::unordered_map<UVertex*, UComponent*> visited;
 		
 		if(args.size() > 0) {
-			for(Vertex* v : args) {
+			for(UVertex* v : args) {
 				if(!g.hasVertex(v->get())) continue;
 				work_stack.push(v);
 				dfs_explore(work_stack, visited, result);
@@ -311,7 +500,7 @@ namespace firenoo {
 		auto iter = g.begin();
 		while(iter != g.end()) {
 			//Main loop
-			Vertex* vert = iter->second; //top-level vertex
+			UVertex* vert = iter->second; //top-level vertex
 			if(visited.find(vert) == visited.end()) {
 				//Start a new DFS tree
 				work_stack.push(vert);
@@ -322,17 +511,15 @@ namespace firenoo {
 		return result;
 	}
 
-	#define FComp std::unordered_set<DFSResult<GraphVertexWB<T, W>>>
-	#define DVert DFSResult<GraphVertexWB<T, W>>
 	template<class T, class W>
-	static void dfs_explore_full(std::stack<DVert>& work_stack, std::unordered_map<Vertex*, FComp*>& visited, std::vector<FComp>& result, size_t& order) {
+	static void dfs_explore_full(std::stack<UDFSResult>& work_stack, std::unordered_map<UVertex*, UFullComp*>& visited, std::vector<UFullComp>& result, size_t& order) {
 		//"Uptree"
-		FComp* component = new FComp();				
+		UFullComp* component = new UFullComp();				
 		bool addComponent = true;
 		while(!work_stack.empty()) {
 			//DFS search loop
-			DVert info = work_stack.top(); //copy?
-			Vertex* v = info._vertex;
+			UDFSResult info = work_stack.top(); //copy?
+			UVertex* v = info._vertex;
 			if(visited.find(v) != visited.end()) {
 				//We've already visited this vertex; it's either
 				//already in the stack or in the result.
@@ -367,17 +554,17 @@ namespace firenoo {
 	}
 
 	template<class T, class W>
-	std::vector<FComp*> dfs_full(const Graph& g, std::initializer_list<GraphVertexW<T, W>*> args) {
-		std::vector<FComp*> result;
+	std::vector<UFullComp*> dfs_full(const UGraph& g, std::initializer_list<GraphVertexW<T, W>*> args) {
+		std::vector<UFullComp*> result;
 		if(g.vertexCount() == 0) {
 			return result;
 		}
 		size_t order = 0;
-		std::stack<DVert*> work_stack;
-		std::unordered_map<Vertex*, FComp*> visited;
+		std::stack<UDFSResult*> work_stack;
+		std::unordered_map<UVertex*, UFullComp*> visited;
 		
 		if(args.size() > 0) {
-			for(Vertex* v : args) {
+			for(UVertex* v : args) {
 				if(!g.hasVertex(v->get()) || visited.find(v) != visited.end()) continue;
 				work_stack.emplace(0, 0, v);
 				dfs_explore_full(work_stack, visited, result, order);
@@ -386,7 +573,7 @@ namespace firenoo {
 		auto iter = g.begin();
 		while(iter != g.end()) {
 			//Main loop
-			DVert* vert = iter->second; //top-level vertex
+			UDFSResult* vert = iter->second; //top-level vertex
 			if(visited.find(vert) == visited.end()) {
 				//Start a new DFS tree
 				work_stack.push(vert);
@@ -396,13 +583,17 @@ namespace firenoo {
 		}
 		return result;
 	}
-	#undef DVert
-	#undef FComp
+	#undef DGraph 
+	#undef DVertex 
+	#undef DComponent 
+	#undef DFullComp 
+	#undef DDFSResult
 
-
-	#undef Component
-	#undef Vertex
-	#undef Graph
+	#undef UGraph 
+	#undef UVertex 
+	#undef UComponent 
+	#undef UFullComp 
+	#undef UDFSResult
 }
 
 #endif
