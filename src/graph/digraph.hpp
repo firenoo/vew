@@ -70,9 +70,8 @@ public:
 						work_stack.push(i->first);
 						result.addVertex(i->first);
 					}
-					W w;
 					//Edge reversal
-					vertex->getEdge(i->first, w);
+					W w = vertex->getEdge(i->first);
 					result.addEdge(i->first->get(), vertex->get(), w);
 					++i;
 				}
@@ -254,8 +253,7 @@ public:
 						work_stack.push(i->first);
 						result.addVertex(i->first);
 					}
-					W w;
-					vertex->getEdge(i->first, w);
+					W w = vertex->getEdge(i->first);
 					result.addEdge(i->first->get(), vertex->get(), w);
 					++i;
 				}
@@ -319,10 +317,12 @@ public:
 	 *  -  w : edge weight
 	 * 
 	 * Returns:
-	 *  - true if and only if the edges were added.
+	 *  - true if and only if both edges were added. Note that both
+	 *    edges will exist after this method returns, so if false is
+	 *    returned, one or both edges existed beforehand.
 	 */
 	virtual bool addBiEdge(const int& v1, const int& v2, W w) {
-		return Graph::addEdge(v1, v2, w) && Graph::addEdge(v2, v1, w);
+		return Graph::addEdge(v1, v2, w) & Graph::addEdge(v2, v1, w);
 	}
 
 	/*

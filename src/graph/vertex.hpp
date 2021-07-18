@@ -65,16 +65,17 @@ public:
 		return _neighbors.size();
 	}
 	/*
-	 * Gets the edge weight between the two vertices. Reads the value into 
-	 * `in`.
+	 * Gets the edge weight between the two vertices.
 	 * NO safety checking is performed.
 	 *
 	 * READ operation.
 	 * Parameters:
 	 *  - other : GraphVertex to check.
+	 * Returns:
+	 *  - the edge from this edge to the other.
 	 */
-	virtual void getEdge(V* other, W& in) const {
-		in = _neighbors[other];
+	virtual W getEdge(V* other) const {
+		return _neighbors.find(other)->second;
 	}
 
 	/*
@@ -218,8 +219,8 @@ public:
 	 * Parameters:
 	 *  - other : GraphVertex to check.
 	 */
-	virtual void getEdge(V* other, W& in) const {
-		in = _neighbors.find(other)->second;
+	virtual W getEdge(V* other) const {
+		return _neighbors.find(other)->second;
 	}
 	
 //WRITE operations

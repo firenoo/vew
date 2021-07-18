@@ -2,7 +2,7 @@
     #define _FN_GRAPH 0
 	#include <unordered_map>
 	#include <functional>
-
+	#include <optional>
 /*
  * Author: firenoo
  * File created on 2021/04/21
@@ -167,33 +167,33 @@ public:
 	}
 
 	/*
-	 * Gets the edge weight of edge (v1, v2), and stores it in `in`.
+	 * Gets the edge weight of edge (v1, v2).
 	 * 
 	 * READ operation.
 	 * Parameters:
 	 *  - v1 : source vertex to check.
 	 *  - v2 : sink vertex to check.
 	 * Returns:
-	 *  - true if and only if the edge weight was read in successfully.
+	 *  - A std::optional object, which contains the edge weight if
+	 *    the edge exists.
 	 */
-	virtual bool getEdge(const T& v1, const T& v2, W& in) const {
+	virtual std::optional<W> getEdge(const T& v1, const T& v2) const {
 		if(hasEdge(v1, v2)) {
-			_vertices.find(v1)->second->getEdge(_vertices.find(v2)->second, in);
-			return true;
+			return _vertices.find(v1)->second->getEdge(_vertices.find(v2)->second);
 		}
-		return false;
+		return {};
 	}
 
-	virtual bool getEdge(const T& v1, const T&& v2, W& in) const {
-		return getEdge(v1, v2, in);
+	virtual std::optional<W> getEdge(const T& v1, const T&& v2) const {
+		return getEdge(v1, v2);
 	}
 
-	virtual bool getEdge(const T&& v1, const T& v2, W& in) const {
-		return getEdge(v1, v2, in);
+	virtual std::optional<W> getEdge(const T&& v1, const T& v2) const {
+		return getEdge(v1, v2);
 	}
 
-	virtual bool getEdge(const T&& v1, const T&& v2, W& in) const {
-		return getEdge(v1, v2, in);
+	virtual std::optional<W> getEdge(const T&& v1, const T&& v2) const {
+		return getEdge(v1, v2);
 	}
 
 	/*
@@ -635,33 +635,33 @@ public:
 	}	
 
 	/*
-	 * Gets the edge weight of edge (v1, v2), and stores it in `in`.
+	 * Gets the edge weight of edge (v1, v2).
 	 * 
 	 * READ operation.
 	 * Parameters:
 	 *  - v1 : source vertex to check.
 	 *  - v2 : sink vertex to check.
 	 * Returns:
-	 *  - true if and only if the edge weight was read in successfully.
+	 *  - A std::optional object, which contains the edge weight if
+	 *    the edge exists.
 	 */
-	virtual bool getEdge(const int& v1, const int& v2, W& in) const {
+	virtual std::optional<W> getEdge(const int& v1, const int& v2) const {
 		if(hasEdge(v1, v2)) {
-			_vertices.find(v1)->second->getEdge(_vertices.find(v2)->second, in);
-			return true;
+			return _vertices.find(v1)->second->getEdge(_vertices.find(v2)->second);
 		}
-		return false;
+		return {};
 	}
 
-	virtual bool getEdge(const int& v1, const int&& v2, W& in) const {
-		return getEdge(v1, v2, in);
+	virtual std::optional<W> getEdge(const int& v1, const int&& v2) const {
+		return getEdge(v1, v2);
 	}
 
-	virtual bool getEdge(const int&& v1, const int& v2, W& in) const {
-		return getEdge(v1, v2, in);
+	virtual std::optional<W> getEdge(const int&& v1, const int& v2) const {
+		return getEdge(v1, v2);
 	}
 
-	virtual bool getEdge(const int&& v1, const int&& v2, W& in) const {
-		return getEdge(v1, v2, in);
+	virtual std::optional<W> getEdge(const int&& v1, const int&& v2) const {
+		return getEdge(v1, v2);
 	}
 
 	/*
