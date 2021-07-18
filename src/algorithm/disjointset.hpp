@@ -49,7 +49,7 @@ public:
 	//gets the size of the backing array.
 	size_t max_size();
 
-	Node& operator[](size_t index) noexcept;
+	Node& operator[](size_t index);
 };
 
 }

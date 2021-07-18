@@ -2,14 +2,14 @@
 #include <utility>
 namespace firenoo {
 
-DisjointSet::DisjointSet(size_t size) {
+DisjointSet::DisjointSet(size_t size) noexcept {
 	_set.reserve(size);
 	for(unsigned int i = 0; i < size; ++i) {
 		_set.emplace_back(i, 0);
 	}
 }
 
-DisjointSet::DisjointSet(DisjointSet&& other) {
+DisjointSet::DisjointSet(DisjointSet&& other) noexcept {
 	_set.insert(_set.end(), 
 	            std::make_move_iterator(other._set.begin()),
 				std::make_move_iterator(other._set.end()));
@@ -46,6 +46,9 @@ size_t DisjointSet::max_size() {
 	return _set.size();
 }
 
+DisjointSet::Node& DisjointSet::operator[](size_t index) {
+	return _set[index];
+}
 
 DisjointSet::Node::Node(size_t parent, size_t rank) :
 	_parent(parent),
