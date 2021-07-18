@@ -96,8 +96,8 @@ public:
 	GraphVertexW(const int&& obj) : GraphVertex<int, W, GraphVertexW>(std::move(obj)) {}
 
 	~GraphVertexW() {
-		clearEdges();
 		clearIndegree();
+		clearEdges();
 	}
 
 //READ operations	
@@ -120,9 +120,10 @@ public:
 	 *
 	 * WRITE operation.
 	 */
-	void clearEdges() {
+	void clearEdges() override {
 		for(auto neighbor : GraphVertex<int,W,GraphVertexW>::_neighbors) {
-			neighbor.first->_neighbors.erase(this);
+			// neighbor.first->_neighbors.erase(this);
+			neighbor.first->_indegrees.erase(this);
 		}
 		GraphVertex<int,W,GraphVertexW>::_neighbors.clear();
 
