@@ -199,5 +199,9 @@ namespace undirected {
 	}
 }
 
+namespace directed {
+	
+}
+
 }
 #endif

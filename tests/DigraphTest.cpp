@@ -10,12 +10,76 @@ namespace firenoo {
 //Test Suite
 namespace test {
 
+void digraph_1() {
+	DirectedGraph<int> g;
+	for(int i = 0; i < 8; ++i) {
+		g.addVertex(i);
+	}
+	assert(g.addEdge(0, 2, 1.0));
+	assert(g.addEdge(1, 2, 2.0));
+	assert(g.addEdge(2, 3, 5.0));
+	assert(g.addEdge(2, 4, 1.5));
+	assert(g.addEdge(3, 5, 2.2));
+	assert(g.addEdge(4, 5, 3.6));
+	assert(g.addEdge(5, 6, 9.2));
+	assert(g.addEdge(3, 6, 7.0));
+	assert(!g.addEdge(3, 6, 1.0));
+	assert(!g.addBiEdge(3, 6, 2.0));
+	//Basic Facts
+	assert(g.vertexCount() == 8);
+	assert(g.edgeCount() == 9);	
+	//Vertices
+	for(int i = 0; i < 8; ++i) {
+		assert(g.hasVertex(i));
+	}
+
+	//Edges
+	assert(g.hasEdge(0, 2));
+	assert(g.hasEdge(1, 2));
+	assert(g.hasEdge(2, 3));
+	assert(g.hasEdge(2, 4));
+	assert(g.hasEdge(3, 5));
+	assert(g.hasEdge(4, 5));
+	assert(g.hasEdge(5, 6));
+	assert(g.hasEdge(3, 6));
+	assert(g.hasEdge(6, 3));
+
+	assert(g.getEdge(0, 2));
+	assert(g.getEdge(0, 2).value() == 1.0);
+	assert(g.getEdge(1, 2));
+	assert(g.getEdge(1, 2).value() == 2.0);
+	assert(g.getEdge(2, 3));
+	assert(g.getEdge(2, 3).value() == 5.0);
+	assert(g.getEdge(2, 4));
+	assert(g.getEdge(2, 4).value() == 1.5);
+	assert(g.getEdge(3, 5));
+	assert(g.getEdge(3, 5).value() == 2.2);
+	assert(g.getEdge(4, 5));
+	assert(g.getEdge(4, 5).value() == 3.6);
+	assert(g.getEdge(5, 6));
+	assert(g.getEdge(5, 6).value() == 9.2);
+	assert(g.getEdge(3, 6));
+	assert(g.getEdge(3, 6).value() == 7.0);
+	assert(g.getEdge(6, 3));
+	assert(g.getEdge(6, 3).value() == 2.0);
+
+	//Fake edges
+	auto s2 = g.getEdge(0, 5);
+	assert(!s2);
+}
+
+void digraph_2() {
+	DirectedGraph<int> g;
+	//Remove vertex: simple
+	g.addVertex(0);
+	g.addVertex(2);
+	
+	assert(g.removeVertex(2));
+	
+}
+
 void testSuite1();
 void testSuite2();
-void testAddVertex();
-void testRemoveVertex();
-void testAddEdge();
-void testRemoveEdge();
 void testdfs_cc();
 void testdfs_full();
 void testReversal();
@@ -29,93 +93,20 @@ void test_top_sort();
  * - clear
  */
 void testSuite1() {
-	testAddVertex();
-	testRemoveVertex();
-	testAddEdge();
-	testRemoveEdge();
+	digraph_1();
+
 }
 
-void testAddVertex() {
-	DirectedGraph<int> g;
-	for(size_t i = 0; i < 100; ++i) {
-		g.addVertex(static_cast<int>(i)); //test &
-	}
-	g.addVertex(101); //test &&
-	assert(g.vertexCount() == 101);
-	assert(g.edgeCount() == 0);
-	for(size_t i = 0; i < 100; ++i) {
-		assert(g.hasVertex(static_cast<int>(i)));
-	}
-	assert(g.hasVertex(101));
-}
-
-void testRemoveVertex() {
-	DirectedGraph<int> g;
-	for(size_t i = 0; i < 50; ++i) {
-		g.addVertex(static_cast<int>(i));
-	}
-	
-	auto vert = g.removeVertex(5);
-	assert(!g.hasVertex(5));
-	delete vert;
-	int x = 10;
-	vert = g.removeVertex(x);
-	assert(!g.hasVertex(x));
-	delete vert;
-	assert(g.vertexCount() == 48);
-}
-
-void testAddEdge() {
-	DirectedGraph<int> g;
-	assert(!g.addEdge(0, 1, 1.0));
-	assert(g.edgeCount() == 0);
-	g.addVertex(0);
-	g.addVertex(1);
-
-	const double WEIGHT = 1.0;
-	double w;
-	assert(g.addEdge(0, 1, WEIGHT));
-	assert(!g.hasEdge(1, 0));
-	int a = 0, b = 1;
-	assert(g.hasEdge(0, 1));
-	assert(g.hasEdge(a, 1));
-	assert(g.hasEdge(0, b));
-	assert(g.hasEdge(a, b));
-	w = 0;
-	assert(g.getEdge(0, 1, w));
-	assert(w == WEIGHT);
-	w = 0;
-	assert(g.getEdge(a, 1, w));
-	assert(w == WEIGHT);
-	w = 0;
-	assert(g.getEdge(0, b, w));
-	assert(w == WEIGHT);
-	w = 0;
-	assert(g.getEdge(a, b, w));
-	assert(w == WEIGHT);
-
-	assert(g.edgeCount() == 1);
-}
-
-void testRemoveEdge() {
-	DirectedGraph<int> g;
-	const double WEIGHT = 1.0;
-	g.addVertex(0);
-	g.addVertex(1);
-	g.addVertex(2);
-	g.addEdge(0, 1, WEIGHT);
-	g.addEdge(1, 2, WEIGHT);
-	
-	double w = 0;
-	assert(g.removeEdge(0, 1));
-	assert(!g.hasEdge(0, 1));
-	assert(!g.getEdge(0, 1, w));
-	assert(w == 0);
-}
-
+/*
+ * Test Suite 2
+ * - dfs 1
+ * - dfs 2
+ * - top sort
+ */
 void testSuite2() {
 	testdfs_cc();
 	testdfs_full();
+	test_top_sort();
 }
 
 void testdfs_cc() {
@@ -189,5 +180,6 @@ void test_top_sort() {
 }
 int main() {
 	firenoo::test::testSuite1();
-	firenoo::test::testSuite2();
+	// firenoo::test::testSuite2();
+	// firenoo::DirectedGraph<int> g;
 }
