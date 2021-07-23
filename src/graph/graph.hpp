@@ -1,952 +1,506 @@
 #ifndef _FN_GRAPH
-    #define _FN_GRAPH 0
+    #define _FN_GRAPH 
+	#include <cstddef>
 	#include <unordered_map>
 	#include <functional>
 	#include <optional>
+	#include <memory>
+	#include <type_traits>
 /*
  * Author: firenoo
  * File created on 2021/04/21
  */
 namespace firenoo {
 
-/*
- * ---------------------------------------------------------------------------- 
- * Graph (Superclass)
- * ----------------------------------------------------------------------------
- * A representation of a mathematical graph object. Submembers of this class
- * are named with the following suffixes to indicate properties of each 
- * implementation.
- * 
- * Implementations should follow the behavior in the doucmentation. They can 
- * copy the docs here, but should include details such as memory allocation.
- * Any discrepency in behavior should be clearly documented.
- * 
- * Example: GraphU means that the graph implementation is unweighted, does not
- * multigraphs, and does not allow self-loops. In other words, it is a simple,
- * directed, unweighted graph.
- *  
- * The suffix order should respect the list below. 
- * 1. U / W - unweighted/weighted (must be one or the other)
- * 4. B - undirected (edges are bidirectional, optional)
- * 2. M - multigraph (multiple edges to the same vertex, optional)
- * 3. L - self-loops (edges from a vertex to itself, optional)
- * 
- * Template Args:
- * T - type of each vertex
- * W - type of weight.
- * V - type of vertex
- */
-template<class T, class W, class V, class Hash = std::hash<T>, class KeyEq = std::equal_to<T>>
-class Graph {
-private:
-	template<class X, class Y>
-	friend class DirectedGraph;
-	template<class X, class Y>
-	friend class UndirectedGraph;
-
-protected:
-	std::unordered_map<std::reference_wrapper<const T>, V*, Hash, KeyEq> _vertices;
-	size_t _edgeCount;
-
-public:
-
-	Graph() : _edgeCount(0) {}
-
-	virtual ~Graph() {
-		clear();
-	};
-
-//READ operations
-
-	/*
-	 * Gets the number of vertices in this graph.
-	 * 
-	 * READ operation.
-	 * Returns:
-	 *  - an unsigned integer representing the total number of vertices
-	 *    stored in the graph.
-	 */
-	virtual size_t vertexCount() const noexcept {
-		return _vertices.size();
-	};
 	
-	/*
-	 * Gets the number of edges in this graph.
-	 *
-	 * READ operation.
-	 * Returns:
-	 *  - an integer representing the total number of edges in
-	 *    the graph.
-	 */
-	virtual size_t edgeCount() const {
-		return _edgeCount;
-	};
 
 	/*
-	 * Checks whether the specified vertex object exists in the graph.
-	 *
-	 * READ operation.
-	 * Parameters:
-	 *  - v : vertex to check.
-	 * Returns:
-	 *  - true if and only if the vertex object exists in this graph
-	 */
-	virtual bool hasVertex(const T& v) const {
-		return _vertices.find(v) != _vertices.end();
-	};
-
-	/*
-	 * Checks whether the specified vertex object exists in the graph.
+	 * ---------------------------------------------------------------------------- 
+	 * Graph (Superclass)
+	 * ----------------------------------------------------------------------------
+	 * A representation of a mathematical graph object. Submembers of this class
+	 * are named with the following suffixes to indicate properties of each 
+	 * implementation.
 	 * 
-	 * READ operation.
-	 * Parameters:
-	 *  - v : vertex to check.
-	 * Returns:
-	 *  - true if and only if the vertex object exists in this graph
-	 */
-	virtual bool hasVertex(const T&& v) const {
-		return _vertices.find(v) != _vertices.end();
-	};
-
-	/*
-	 * Checks whether an edge between two vertices exists in the graph.
+	 * Implementations should follow the behavior in the doucmentation. They can 
+	 * copy the docs here, but should include details such as memory allocation.
+	 * Any discrepency in behavior should be clearly documented.
 	 * 
-	 * READ operation.
-	 * Parameters:
-	 *  - v1 : source vertex to check.
-	 *  - v2 : sink vertex to check.
-	 * Returns:
-	 *  - true if and only if the edge (v1, v2) exists in this graph
-	 */
-	virtual bool hasEdge(const T& v1, const T& v2) const {
-		auto vertex1 = _vertices.find(v1);
-		auto vertex2 = _vertices.find(v2);
-		return vertex1 != _vertices.end() && 
-		       vertex2 != _vertices.end() && 
-			   vertex1->second->hasEdge(vertex2->second);
-	}
-	
-	/*
-	 * Checks whether an edge between two vertices exists in the graph.
+	 * Example: GraphU means that the graph implementation is unweighted, does not
+	 * multigraphs, and does not allow self-loops. In other words, it is a simple,
+	 * directed, unweighted graph.
+	 *  
+	 * The suffix order should respect the list below. 
+	 * 1. U / W - unweighted/weighted (must be one or the other)
+	 * 4. B - undirected (edges are bidirectional, optional)
+	 * 2. M - multigraph (multiple edges to the same vertex, optional)
+	 * 3. L - self-loops (edges from a vertex to itself, optional)
 	 * 
-	 * READ operation.
-	 * Parameters:
-	 *  - v1 : source vertex to check.
-	 *  - v2 : sink vertex to check.
-	 * Returns:
-	 *  - true if and only if the edge (v1, v2) exists in this graph
+	 * Template Args:
+	 * T - type of each vertex
+	 * W - type of weight.
 	 */
-	virtual bool hasEdge(const T& v1, const T&& v2) const {
-		return hasEdge(v1, v2);
-	}	
-	/*
-	 * Checks whether an edge between two vertices exists in the graph.
-	 * 
-	 * READ operation.
-	 * Parameters:
-	 *  - v1 : source vertex to check.
-	 *  - v2 : sink vertex to check.
-	 * Returns:
-	 *  - true if and only if the edge (v1, v2) exists in this graph
-	 */
-	virtual bool hasEdge(const T&& v1, const T& v2) const {
-		return hasEdge(v1, v2);
-	}	
-	/*
-	 * Checks whether an edge between two vertices exists in the graph.
-	 * 
-	 * READ operation.
-	 * Parameters:
-	 *  - v1 : source vertex to check.
-	 *  - v2 : sink vertex to check.
-	 * Returns:
-	 *  - true if and only if the edge (v1, v2) exists in this graph
-	 */
-	virtual bool hasEdge(const T&& v1, const T&& v2) const {
-		return hasEdge(v1, v2);
-	}
-
-	/*
-	 * Gets the edge weight of edge (v1, v2).
-	 * 
-	 * READ operation.
-	 * Parameters:
-	 *  - v1 : source vertex to check.
-	 *  - v2 : sink vertex to check.
-	 * Returns:
-	 *  - A std::optional object, which contains the edge weight if
-	 *    the edge exists.
-	 */
-	virtual std::optional<W> getEdge(const T& v1, const T& v2) const {
-		if(hasEdge(v1, v2)) {
-			return _vertices.find(v1)->second->getEdge(_vertices.find(v2)->second);
+	template <
+		class T,
+		class W = double,
+		class Hash = std::hash<T>,
+		class KeyEq = std::equal_to<T>, 
+		typename std::enable_if<std::is_arithmetic<W>::value, bool>::type = true
+	> class Graph {
+	public:
+		class Vertex;
+		class Edge;
+	protected:
+		std::unordered_map<T, std::unique_ptr<Vertex>, Hash, KeyEq> m_vertices;
+		std::unordered_map<Vertex*, std::vector<Edge>> m_edges;
+		std::size_t m_edgeCount = 0;
+		//Gets the pointer to the vertex mapped by `v`.
+		std::optional<Vertex*> getVertex(const T& v) const {
+			auto it = m_vertices.find(v);
+			if(it != m_vertices.end()) {
+				return it->second.get();
+			}
+			return {};
 		}
-		return {};
-	}
+	public:
+		class Vertex {
+		protected:
+			T m_obj;
+		public:
+			using iterator = typename std::unordered_map<Vertex*, W>::iterator;
+			
+			Vertex(const T& obj) :
+				m_obj(obj) {}
+			
+			T& get() {
+				return m_obj;
+			}
 
-	virtual std::optional<W> getEdge(const T& v1, const T&& v2) const {
-		return getEdge(v1, v2);
-	}
+			T& operator*() {
+				return m_obj;
+			}
 
-	virtual std::optional<W> getEdge(const T&& v1, const T& v2) const {
-		return getEdge(v1, v2);
-	}
+			T* operator->() {
+				return &m_obj;
+			}
 
-	virtual std::optional<W> getEdge(const T&& v1, const T&& v2) const {
-		return getEdge(v1, v2);
-	}
 
-	/*
-	 * Gets an iterator to an arbitrary vertex in this graph.
-	 * 
-	 * READ operation.
-	 * Returns:
-	 *  - a const_iterator that points to some pairing (T, GraphVertexW<T, W>*)
-	 *    in this graph.
-	 */
-	virtual typename std::unordered_map<T, V*>::const_iterator begin() const {
-		return _vertices.cbegin();
-	}
+			iterator begin() {
+				return m_edges[this].begin();
+			}
 
-	/*
-	 * Gets the end iterator for the vertex set in this graph.
-	 * 
-	 * READ operation.
-	 * Returns:
-	 *  - a const_iterator that points to the end iterator.
-	 */
-	virtual typename std::unordered_map<T, V*>::const_iterator end() const {
-		return _vertices.cend();
-	}
+			iterator end() {
+				return m_edges[this].end();
+			}
+		};
+		
+		class Edge {
+			Vertex* m_v2;
+			W m_weight;
 
-//WRITE operations
+		public:
+			Edge(Vertex* v2, const W& weight) :
+				m_v2(v2),
+				m_weight(weight) {}
 
-	/*
-	 * Adds the vertex to the graph if it doesn't exist already.
-	 * 
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v : the object backing the vertex.
-	 * Returns:
-	 *  - a pointer to the new vertex if it was created, or a pointer to the 
-	 *    existing vertex.
-	 */
-	virtual V* addVertex(const T& v) = 0;
+			Vertex* vertex_2() {
+				return m_v2;
+			}
 
-	/*
-	 * Adds the vertex to the graph if it doesn't exist already.
-	 * 
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v : the object backing the vertex.
-	 * Returns:
-	 *  - a pointer to the new vertex if it was created, or a pointer to the 
-	 *    existing vertex.
-	 */
-	virtual V* addVertex(const T&& v) {
-		return addVertex(v);
-	};
+			W& weight() {
+				return m_weight;
+			}
+		};
 
-	/*
-	 * Adds the vertex to the graph if it doesn't exist already.
-	 * 
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v : the object backing the vertex.
-	 * Returns:
-	 *  - true if and only if a vertex was added.
-	 */
-	virtual bool addVertex(V* v) {
-		if(!hasVertex(v->get())) {
-			_vertices[v->get()] = v;
-			return true;
+		Graph() {}
+
+		virtual ~Graph() {
+			m_vertices.clear();
+			m_edges.clear();
 		}
-		return false;
-	}
 
-	/*
-	 * Removes the specified vertex from the graph.
-	 * 
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v : vertex to remove from the graph.
-	 * Returns:
-	 *  - a pointer to the vertex that was removed, or nullptr if no vertex was
-	 *    removed
-	 */
-	virtual V* removeVertex(const T& v) {
-		auto search = _vertices.find(v->get());
-		if(search != _vertices.end()) {
-			V* vert = search->second;
-			vert->clearIndegree();
-			_vertices.erase(search);
-			return true;
+	//READ operations
+
+		/*
+		* Gets the number of vertices in this graph.
+		* 
+		* READ operation.
+		* Returns:
+		*  - an unsigned integer representing the total number of vertices
+		*    stored in the graph.
+		*/
+		std::size_t vertexCount() const noexcept {
+			return m_vertices.size();
+		};
+		
+		/*
+		* Gets the number of edges in this graph.
+		*
+		* READ operation.
+		* Returns:
+		*  - an integer representing the total number of edges in
+		*    the graph.
+		*/
+		std::size_t edgeCount() const noexcept {
+			return m_edgeCount;
+		};
+
+		/*
+		* Checks whether the specified vertex object exists in the graph.
+		*
+		* READ operation.
+		* Parameters:
+		*  - v : vertex to check.
+		* Returns:
+		*  - true if and only if the vertex object exists in this graph
+		*/
+		virtual bool hasVertex(const T& v) const {
+			return m_vertices.find(v) != m_vertices.end();
+		};
+
+		/*
+		* Checks whether the specified vertex object exists in the graph.
+		* 
+		* READ operation.
+		* Parameters:
+		*  - v : vertex to check.
+		* Returns:
+		*  - true if and only if the vertex object exists in this graph
+		*/
+		virtual bool hasVertex(const T&& v) const {
+			return hasVertex(v);
+		};
+
+		/*
+		* Checks whether an edge between two vertices exists in the graph.
+		* 
+		* READ operation.
+		* Parameters:
+		*  - v1 : source vertex to check.
+		*  - v2 : sink vertex to check.
+		* Returns:
+		*  - true if and only if the edge (v1, v2) exists in this graph
+		*/
+		virtual bool hasEdge(const T& v1, const T& v2) const {
+			auto vert1 = getVertex(v1);
+			auto vert2 = getVertex(v2);
+			if(vert1 && vert2) {
+				auto v1_edges = m_edges.at(*vert1);
+				for(auto edge : v1_edges) {
+					if(edge.vertex_2() == vert2) {
+						return true;
+					}
+				}
+			}
+			return false;
 		}
-		return false;
-	};
-
-	/*
-	 * Removes the specified vertex from the graph. 
-	 * 
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v : vertex to remove from the graph.
-	 * Returns:
-	 *  - a pointer to the vertex that was removed, or nullptr if no vertex was
-	 *    removed
-	 */
-	virtual V* removeVertex(const T&& v) {
-		return removeVertex(v);
-	};
-
-	/*
-	 * Removes the specified vertex from the graph. This operation
-	 * does NOT free the pointer passed in.
-	 * 
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v : vertex to remove from the graph.
-	 * Returns:
-	 *  - true if and only if the vertex was removed.
-	 */
-	virtual bool removeVertex(V* v) {
-		auto search = _vertices.find(v->get());
-		if(search != _vertices.end()) {
-			V* vert = search->second;
-			vert->clearEdges();
-			_vertices.erase(search);
-			return true;
+		
+		/*
+		* Checks whether an edge between two vertices exists in the graph.
+		* 
+		* READ operation.
+		* Parameters:
+		*  - v1 : source vertex to check.
+		*  - v2 : sink vertex to check.
+		* Returns:
+		*  - true if and only if the edge (v1, v2) exists in this graph
+		*/
+		virtual bool hasEdge(const T& v1, const T&& v2) const {
+			return hasEdge(v1, v2);
+		}	
+		/*
+		* Checks whether an edge between two vertices exists in the graph.
+		* 
+		* READ operation.
+		* Parameters:
+		*  - v1 : source vertex to check.
+		*  - v2 : sink vertex to check.
+		* Returns:
+		*  - true if and only if the edge (v1, v2) exists in this graph
+		*/
+		virtual bool hasEdge(const T&& v1, const T& v2) const {
+			return hasEdge(v1, v2);
+		}	
+		/*
+		* Checks whether an edge between two vertices exists in the graph.
+		* 
+		* READ operation.
+		* Parameters:
+		*  - v1 : source vertex to check.
+		*  - v2 : sink vertex to check.
+		* Returns:
+		*  - true if and only if the edge (v1, v2) exists in this graph
+		*/
+		virtual bool hasEdge(const T&& v1, const T&& v2) const {
+			return hasEdge(v1, v2);
 		}
-		return false;
-	};
 
-	/*
-	 * Adds a directed edge between the two specified vertices.
-	 *
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v1 : source vertex
-	 *  - v2 : sink vertex
-	 *  -  w : edge weight
-	 * 
-	 * Returns:
-	 *  - true if if the edge was added.
-	 *  - false if one of the conditions are true:
-	 *     1. an edge already exists between the vertices,
-	 *     2. one or both vertices don't exist in the graph.
-	 */
-	virtual bool addEdge(const T& v1, const T& v2, W w) {
-		if(hasVertex(v1) && hasVertex(v2) && !hasEdge(v1, v2)) {
-			V* src = _vertices[v1];
-			V* snk = _vertices[v2];
-			++_edgeCount;
-			src->addEdge(snk, w);
-			return true;
+		/*
+		* Gets the edge weight of edge (v1, v2).
+		* 
+		* READ operation.
+		* Parameters:
+		*  - v1 : source vertex to check.
+		*  - v2 : sink vertex to check.
+		* Returns:
+		*  - A std::optional object, which contains the edge weight if
+		*    the edge exists.
+		*/
+		virtual std::optional<W> getEdge(const T& v1, const T& v2) const {
+			auto vert1 = getVertex(v1);
+			auto vert2 = getVertex(v2);
+			if(vert1 && vert2) {
+				auto v1_edges = m_edges.at(*vert1);
+				//O(n)
+				for(auto edge : v1_edges) {
+					if(edge.vertex_2() == *vert2) {
+						return edge.weight();
+					}
+				}
+			}
+			return {};
 		}
-		return false;
-	};
 
-	/*
-	 * Adds a directed edge between the two specified vertices.
-	 *
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v1 : source vertex
-	 *  - v2 : sink vertex
-	 *  -  w : edge weight
-	 * 
-	 * Returns:
-	 *  - true if if the edge was added.
-	 *  - false if one of the conditions are true:
-	 *     1. an edge already exists between the vertices,
-	 *     2. one or both vertices don't exist in the graph.
-	 */
-	virtual bool addEdge(const T& v1, const T&& v2, W w) {
-		return addEdge(v1, v2, w);
-	}
-
-	/*
-	 * Adds a directed edge between the two specified vertices.
-	 *
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v1 : source vertex
-	 *  - v2 : sink vertex
-	 *  -  w : edge weight
-	 * 
-	 * Returns:
-	 *  - true if if the edge was added.
-	 *  - false if one of the conditions are true:
-	 *     1. an edge already exists between the vertices,
-	 *     2. one or both vertices don't exist in the graph.
-	 */
-	virtual bool addEdge(const T&& v1, const T& v2, W w) {
-		return addEdge(v1, v2, w);
-	}
-
-	/*
-	 * Adds a directed edge between the two specified vertices.
-	 *
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v1 : source vertex
-	 *  - v2 : sink vertex
-	 *  -  w : edge weight
-	 * 
-	 * Returns:
-	 *  - true if if the edge was added.
-	 *  - false if one of the conditions are true:
-	 *     1. an edge already exists between the vertices,
-	 *     2. one or both vertices don't exist in the graph.
-	 */
-	virtual bool addEdge(const T&& v1, const T&& v2, W w) {
-		return addEdge(v1, v2, w);
-	}
-
-	/*
-	 * Removes the specified edge from the graph.
-	 *
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v1 : source vertex
-	 *  - v2 : sink vertex
-	 * Returns:
-	 *  - true if and only if an edge was removed.
-	 */
-	virtual bool removeEdge(const T& v1, const T& v2) {
-		auto src = _vertices.find(v1);
-		auto snk = _vertices.find(v2);
-		if(src != _vertices.end() && snk != _vertices.end() && hasEdge(v1, v2)) {
-			src->second->removeEdge(snk->second);
-			--_edgeCount;
-			return true;
+		virtual std::optional<W> getEdge(const T& v1, const T&& v2) const {
+			return getEdge(v1, v2);
 		}
-		return false;
-	};
 
-	/*
-	 * Removes the specified edge from the graph.
-	 *
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v1 : source vertex
-	 *  - v2 : sink vertex
-	 * Returns:
-	 *  - true if and only if an edge was removed.
-	 */
-	virtual bool removeEdge(const T&& v1, const T&& v2) {
-		return removeEdge(v1, v2);
-	};
-
-	/*
-	 * The specified vertex has edges from it removed.
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v : vertex 
-	 * Returns:
-	 *  - true if and only if all edges were removed.
-	 */
-	virtual bool removeNeighbors(const T& v) {
-		auto query = _vertices.find(v);
-		if(query != _vertices.end()) {
-			V* vertex = query->second;
-			_edgeCount -= vertex->outdegree();
-			vertex->clearEdges();
-			return true;
+		virtual std::optional<W> getEdge(const T&& v1, const T& v2) const {
+			return getEdge(v1, v2);
 		}
-		return false;
-	};
 
-	/*
-	 * The specified vertex has edges from it removed.
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v : vertex
-	 * Returns:
-	 *  - true if and only if all edges were removed.
-	 */
-	virtual bool removeNeighbors(const T&& v) {
-		return removeNeighbors(v);
-	}
-
-	/*
-	 * Removes all vertices and edges from the graph.
-	 * WRITE operation. 
-	 */
-	virtual void clear() {
-		for(auto v : _vertices) {
-			delete v.second;
+		virtual std::optional<W> getEdge(const T&& v1, const T&& v2) const {
+			return getEdge(v1, v2);
 		}
-		_vertices.clear();
-		_edgeCount = 0;
-	}
-};
 
-/*
- * ---------------------------------------------------------------------------- 
- * Graph (int specialization)
- * ----------------------------------------------------------------------------
- * A representation of a mathematical graph object. Submembers of this class
- * are named with the following suffixes to indicate properties of each 
- * implementation.
- * 
- * Implementations should follow the behavior in the doucmentation. They can 
- * copy the docs here, but should include details such as memory allocation.
- * Any discrepency in behavior should be clearly documented.
- * 
- * Example: GraphU means that the graph implementation is unweighted, does not
- * multigraphs, and does not allow self-loops. In other words, it is a simple,
- * directed, unweighted graph.
- *  
- * The suffix order should respect the list below. 
- * 1. U / W - unweighted/weighted (must be one or the other)
- * 4. B - undirected (edges are bidirectional, optional)
- * 2. M - multigraph (multiple edges to the same vertex, optional)
- * 3. L - self-loops (edges from a vertex to itself, optional)
- * 
- * Template Args:
- * T - type of each vertex
- * W - type of weight.
- * V - type of vertex
- */
-template<class W, class V, class Hash, class KeyEq>
-class Graph<int, W, V, Hash, KeyEq> {
-
-protected:
-	std::unordered_map<int, V*, Hash, KeyEq> _vertices;
-	size_t _edgeCount;
-
-public:
-
-	Graph() : _edgeCount(0) {}
-
-	virtual ~Graph() {
-		clear();
-	};
-
-//READ operations
-
-	/*
-	 * Gets the number of vertices in this graph.
-	 * 
-	 * READ operation.
-	 * Returns:
-	 *  - an unsigned integer representing the total number of vertices
-	 *    stored in the graph.
-	 */
-	virtual size_t vertexCount() const noexcept {
-		return _vertices.size();
-	};
-	
-	/*
-	 * Gets the number of edges in this graph.
-	 *
-	 * READ operation.
-	 * Returns:
-	 *  - an integer representing the total number of edges in
-	 *    the graph.
-	 */
-	virtual size_t edgeCount() const {
-		return _edgeCount;
-	};
-
-	/*
-	 * Checks whether the specified vertex object exists in the graph.
-	 *
-	 * READ operation.
-	 * Parameters:
-	 *  - v : vertex to check.
-	 * Returns:
-	 *  - true if and only if the vertex object exists in this graph
-	 */
-	virtual bool hasVertex(const int& v) const {
-		return _vertices.find(v) != _vertices.end();
-	};
-
-	/*
-	 * Checks whether the specified vertex object exists in the graph.
-	 * 
-	 * READ operation.
-	 * Parameters:
-	 *  - v : vertex to check.
-	 * Returns:
-	 *  - true if and only if the vertex object exists in this graph
-	 */
-	virtual bool hasVertex(const int&& v) const {
-		return _vertices.find(v) != _vertices.end();
-	};
-
-	/*
-	 * Checks whether an edge between two vertices exists in the graph.
-	 * 
-	 * READ operation.
-	 * Parameters:
-	 *  - v1 : source vertex to check.
-	 *  - v2 : sink vertex to check.
-	 * Returns:
-	 *  - true if and only if the edge (v1, v2) exists in this graph
-	 */
-	virtual bool hasEdge(const int& v1, const int& v2) const {
-		auto vertex1 = _vertices.find(v1);
-		auto vertex2 = _vertices.find(v2);
-		return vertex1 != _vertices.end() && 
-		       vertex2 != _vertices.end() && 
-			   vertex1->second->hasEdge(vertex2->second);
-	}
-	
-	/*
-	 * Checks whether an edge between two vertices exists in the graph.
-	 * 
-	 * READ operation.
-	 * Parameters:
-	 *  - v1 : source vertex to check.
-	 *  - v2 : sink vertex to check.
-	 * Returns:
-	 *  - true if and only if the edge (v1, v2) exists in this graph
-	 */
-	virtual bool hasEdge(const int& v1, const int&& v2) const {
-		return hasEdge(v1, v2);
-	}	
-	/*
-	 * Checks whether an edge between two vertices exists in the graph.
-	 * 
-	 * READ operation.
-	 * Parameters:
-	 *  - v1 : source vertex to check.
-	 *  - v2 : sink vertex to check.
-	 * Returns:
-	 *  - true if and only if the edge (v1, v2) exists in this graph
-	 */
-	virtual bool hasEdge(const int&& v1, const int& v2) const {
-		return hasEdge(v1, v2);
-	}	
-	/*
-	 * Checks whether an edge between two vertices exists in the graph.
-	 * 
-	 * READ operation.
-	 * Parameters:
-	 *  - v1 : source vertex to check.
-	 *  - v2 : sink vertex to check.
-	 * Returns:
-	 *  - true if and only if the edge (v1, v2) exists in this graph
-	 */
-	virtual bool hasEdge(const int&& v1, const int&& v2) const {
-		return hasEdge(v1, v2);
-	}	
-
-	/*
-	 * Gets the edge weight of edge (v1, v2).
-	 * 
-	 * READ operation.
-	 * Parameters:
-	 *  - v1 : source vertex to check.
-	 *  - v2 : sink vertex to check.
-	 * Returns:
-	 *  - A std::optional object, which contains the edge weight if
-	 *    the edge exists.
-	 */
-	virtual std::optional<W> getEdge(const int& v1, const int& v2) const {
-		if(hasEdge(v1, v2)) {
-			return _vertices.find(v1)->second->getEdge(_vertices.find(v2)->second);
+		/*
+		 * Gets a `std::vector` of all vertices in the graph.
+		 * 
+		 * READ operation.
+		 * Returns:
+		 *  - a vector that has all vertices of the graph
+		 */
+		virtual std::vector<Vertex*> vertices() const {
+			std::vector<Vertex*> result;
+			result.reserve(m_vertices.size());
+			for(auto& [obj, vertex] : m_vertices) {
+				result.push_back(vertex.get());
+			}
+			return result;
 		}
-		return {};
-	}
 
-	virtual std::optional<W> getEdge(const int& v1, const int&& v2) const {
-		return getEdge(v1, v2);
-	}
-
-	virtual std::optional<W> getEdge(const int&& v1, const int& v2) const {
-		return getEdge(v1, v2);
-	}
-
-	virtual std::optional<W> getEdge(const int&& v1, const int&& v2) const {
-		return getEdge(v1, v2);
-	}
-
-	/*
-	 * Gets an iterator to an arbitrary vertex in this graph.
-	 * 
-	 * READ operation.
-	 * Returns:
-	 *  - a const_iterator that points to some pairing (T, GraphVertexW<T, W>*)
-	 *    in this graph.
-	 */
-	virtual typename std::unordered_map<int, V*>::const_iterator begin() const {
-		return _vertices.cbegin();
-	}
-
-	/*
-	 * Gets the end iterator for the vertex set in this graph.
-	 * 
-	 * READ operation.
-	 * Returns:
-	 *  - a const_iterator that points to the end iterator.
-	 */
-	virtual typename std::unordered_map<int, V*>::const_iterator end() const {
-		return _vertices.cend();
-	}
-
-//WRITE operations
-
-	/*
-	 * Adds the vertex to the graph if it doesn't exist already.
-	 * 
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v : the object backing the vertex.
-	 * Returns:
-	 *  - a pointer to the new vertex if it was created, or a pointer to the 
-	 *    existing vertex.
-	 */
-	virtual V* addVertex(const int& v) = 0;
-
-	/*
-	 * Adds the vertex to the graph if it doesn't exist already.
-	 * 
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v : the object backing the vertex.
-	 * Returns:
-	 *  - a pointer to the new vertex if it was created, or a pointer to the 
-	 *    existing vertex.
-	 */
-	virtual V* addVertex(const int&& v) {
-		return addVertex(v);
-	}
-
-	/*
-	 * Adds the vertex to the graph if it doesn't exist already.
-	 * 
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v : the object backing the vertex.
-	 * Returns:
-	 *  - true if and only if a vertex was added.
-	 */
-	virtual bool addVertex(V* v) {
-		if(!hasVertex(v->get())) {
-			_vertices[v->get()] = v;
-			return true;
+		/*
+		 * Gets a `std::vector` of all edges in the graph.
+		 * 
+		 * READ operation.
+		 * Returns:
+		 *  - a vector that has all edges of the graph
+		 */
+		virtual std::vector<Edge> edges() const {
+			std::vector<Edge> result;
+			result.reserve(m_edges.size());
+			for(auto& [vertex, edges] : m_edges) {
+				result.insert(result.end(), edges.begin(), edges.end());
+			}
+			return result;
 		}
-		return false;
+
+	//WRITE operations
+
+		/*
+		* Adds the vertex to the graph if it doesn't exist already.
+		* 
+		* WRITE operation.
+		* Parameters:
+		*  - v : the object backing the vertex.
+		* Returns:
+		*  - a pointer to the new vertex if it was created, or a pointer to the 
+		*    existing vertex.
+		*/
+		virtual bool addVertex(const T& v) {
+			if(!hasVertex(v)) {
+				
+				m_vertices[v] = std::make_unique<Vertex>(v);
+				m_edges[m_vertices[v].get()] = std::vector<Edge>();
+				return true;
+			}
+			return false;
+		}
+
+		/*
+		* Adds the vertex to the graph if it doesn't exist already.
+		* 
+		* WRITE operation.
+		* Parameters:
+		*  - v : the object backing the vertex.
+		* Returns:
+		*  - a pointer to the new vertex if it was created, or a pointer to the 
+		*    existing vertex.
+		*/
+		virtual bool addVertex(const T&& v) {
+			return addVertex(v);
+		};
+
+		/*
+		* Removes the specified vertex from the graph.
+		* 
+		* WRITE operation.
+		* Parameters:
+		*  - v : vertex to remove from the graph.
+		* Returns:
+		*  - a pointer to the vertex that was removed, or nullptr if no vertex was
+		*    removed
+		*/
+		virtual bool removeVertex(const T& v) {
+			if(hasVertex(v)) {
+				Vertex* vptr = m_vertices[v].get();
+				m_edges.erase(vptr);
+				//delete edges to this vertex
+				for(auto &[entry, edgelist] : m_edges) {
+					removeEdge(**entry, v);
+				}
+				return true;
+			}
+			return false;
+		}
+
+		/*
+		* Removes the specified vertex from the graph. 
+		* 
+		* WRITE operation.
+		* Parameters:
+		*  - v : vertex to remove from the graph.
+		* Returns:
+		*  - a pointer to the vertex that was removed, or nullptr if no vertex was
+		*    removed
+		*/
+		virtual bool removeVertex(const T&& v) {
+			return removeVertex(v);
+		};
+
+		/*
+		* Adds a directed edge between the two specified vertices.
+		*
+		* WRITE operation.
+		* Parameters:
+		*  - v1 : source vertex
+		*  - v2 : sink vertex
+		*  -  w : edge weight
+		* 
+		* Returns:
+		*  - true if if the edge was added.
+		*  - false if one of the conditions are true:
+		*     1. an edge already exists between the vertices,
+		*     2. one or both vertices don't exist in the graph.
+		*/
+		virtual bool addEdge(const T& v1, const T& v2, const W& w) {
+			auto vertex1 = getVertex(v1);
+			auto vertex2 = getVertex(v2);
+			if(vertex1 && vertex2 && !hasEdge(v1, v2)) {
+				m_edges[*vertex1].emplace_back(Edge(*vertex2, w));
+				++m_edgeCount;
+				return true;
+			}
+			return false;
+		}
+
+		/*
+		* Adds a directed edge between the two specified vertices.
+		*
+		* WRITE operation.
+		* Parameters:
+		*  - v1 : source vertex
+		*  - v2 : sink vertex
+		*  -  w : edge weight
+		* 
+		* Returns:
+		*  - true if if the edge was added.
+		*  - false if one of the conditions are true:
+		*     1. an edge already exists between the vertices,
+		*     2. one or both vertices don't exist in the graph.
+		*/
+		virtual bool addEdge(const T& v1, const T&& v2, W w) {
+			return addEdge(v1, v2, w);
+		}
+
+		/*
+		* Adds a directed edge between the two specified vertices.
+		*
+		* WRITE operation.
+		* Parameters:
+		*  - v1 : source vertex
+		*  - v2 : sink vertex
+		*  -  w : edge weight
+		* 
+		* Returns:
+		*  - true if if the edge was added.
+		*  - false if one of the conditions are true:
+		*     1. an edge already exists between the vertices,
+		*     2. one or both vertices don't exist in the graph.
+		*/
+		virtual bool addEdge(const T&& v1, const T& v2, W w) {
+			return addEdge(v1, v2, w);
+		}
+
+		/*
+		* Adds a directed edge between the two specified vertices.
+		*
+		* WRITE operation.
+		* Parameters:
+		*  - v1 : source vertex
+		*  - v2 : sink vertex
+		*  -  w : edge weight
+		* 
+		* Returns:
+		*  - true if if the edge was added.
+		*  - false if one of the conditions are true:
+		*     1. an edge already exists between the vertices,
+		*     2. one or both vertices don't exist in the graph.
+		*/
+		virtual bool addEdge(const T&& v1, const T&& v2, W w) {
+			return addEdge(v1, v2, w);
+		}
+
+		/*
+		* Removes the specified edge from the graph.
+		*
+		* WRITE operation.
+		* Parameters:
+		*  - v1 : source vertex
+		*  - v2 : sink vertex
+		* Returns:
+		*  - true if and only if an edge was removed.
+		*/
+		virtual bool removeEdge(const T& v1, const T& v2) = 0;
+
+		/*
+		* Removes the specified edge from the graph.
+		*
+		* WRITE operation.
+		* Parameters:
+		*  - v1 : source vertex
+		*  - v2 : sink vertex
+		* Returns:
+		*  - true if and only if an edge was removed.
+		*/
+		virtual bool removeEdge(const T&& v1, const T&& v2) {
+			return removeEdge(v1, v2);
+		}
+
+		
+
+		/*
+		 * Removes all vertices and edges from the graph.
+		 * WRITE operation. 
+		 */
+		virtual void clear() {
+			m_vertices.clear();
+			m_edges.clear();
+			m_edgeCount = 0;
+		}
 	};
 
-	/*
-	 * Removes the specified vertex from the graph.
-	 * 
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v : vertex to remove from the graph.
-	 * Returns:
-	 *  - a pointer to the vertex that was removed, or nullptr if no vertex was
-	 *    removed
-	 */
-	virtual V* removeVertex(const int& v) {
-		auto search = _vertices.find(v);
-		if(search == _vertices.end()) {
-			return nullptr;
-		}
-		V* vert = search->second;
-		_vertices.erase(search);
-		return vert;
-	}
 
-	/*
-	 * Removes the specified vertex from the graph. 
-	 * 
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v : vertex to remove from the graph.
-	 * Returns:
-	 *  - a pointer to the vertex that was removed, or nullptr if no vertex was
-	 *    removed
-	 */
-	virtual V* removeVertex(const int&& v) {
-		return removeVertex(v);
-	}
-
-	/*
-	 * Removes the specified vertex from the graph. 
-	 * 
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v : vertex to remove from the graph.
-	 * Returns:
-	 *  - true if and only if the vertex was removed.
-	 */
-	virtual bool removeVertex(V* v) {
-		auto search = _vertices.find(v->get());
-		if(search != _vertices.end()) {
-			V* vert = search->second;
-			vert->clearEdges();
-			_vertices.erase(search);
-			return true;
-		}
-		return false;
-	}
-
-	/*
-	 * Adds a directed edge between the two specified vertices.
-	 *
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v1 : source vertex
-	 *  - v2 : sink vertex
-	 *  -  w : edge weight
-	 * 
-	 * Returns:
-	 *  - true if if the edge was added.
-	 *  - false if one of the conditions are true:
-	 *     1. an edge already exists between the vertices,
-	 *     2. one or both vertices don't exist in the graph.
-	 */
-	virtual bool addEdge(const int& v1, const int& v2, W w) {
-		if(hasVertex(v1) && hasVertex(v2) && !hasEdge(v1, v2)) {
-			V* src = _vertices[v1];
-			V* snk = _vertices[v2];
-			++_edgeCount;
-			src->addEdge(snk, w);
-			return true;
-		}
-		return false;
-	};
-
-	/*
-	 * Adds a directed edge between the two specified vertices.
-	 *
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v1 : source vertex
-	 *  - v2 : sink vertex
-	 *  -  w : edge weight
-	 * 
-	 * Returns:
-	 *  - true if if the edge was added.
-	 *  - false if one of the conditions are true:
-	 *     1. an edge already exists between the vertices,
-	 *     2. one or both vertices don't exist in the graph.
-	 */
-	virtual bool addEdge(const int& v1, const int&& v2, W w) {
-		return addEdge(v1, v2, w);
-	}
-
-	/*
-	 * Adds a directed edge between the two specified vertices.
-	 *
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v1 : source vertex
-	 *  - v2 : sink vertex
-	 *  -  w : edge weight
-	 * 
-	 * Returns:
-	 *  - true if if the edge was added.
-	 *  - false if one of the conditions are true:
-	 *     1. an edge already exists between the vertices,
-	 *     2. one or both vertices don't exist in the graph.
-	 */
-	virtual bool addEdge(const int&& v1, const int& v2, W w) {
-		return addEdge(v1, v2, w);
-	}
-
-	/*
-	 * Adds a directed edge between the two specified vertices.
-	 *
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v1 : source vertex
-	 *  - v2 : sink vertex
-	 *  -  w : edge weight
-	 * 
-	 * Returns:
-	 *  - true if if the edge was added.
-	 *  - false if one of the conditions are true:
-	 *     1. an edge already exists between the vertices,
-	 *     2. one or both vertices don't exist in the graph.
-	 */
-	virtual bool addEdge(const int&& v1, const int&& v2, W w) {
-		return addEdge(v1, v2, w);
-	}
-
-	/*
-	 * Removes the specified edge from the graph.
-	 *
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v1 : source vertex
-	 *  - v2 : sink vertex
-	 * Returns:
-	 *  - true if and only if an edge was removed.
-	 */
-	virtual bool removeEdge(const int& v1, const int& v2) {
-		auto src = _vertices.find(v1);
-		auto snk = _vertices.find(v2);
-		if(src != _vertices.end() && snk != _vertices.end() && hasEdge(v1, v2)) {
-			src->second->removeEdge(snk->second);
-			--_edgeCount;
-			return true;
-		}
-		return false;
-	};
-
-	/*
-	 * Removes the specified edge from the graph.
-	 *
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v1 : source vertex
-	 *  - v2 : sink vertex
-	 * Returns:
-	 *  - true if and only if an edge was removed.
-	 */
-	virtual bool removeEdge(const int&& v1, const int&& v2) {
-		return removeEdge(v1, v2);
-	};
-
-	/*
-	 * The specified vertex has edges from it removed.
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v : vertex 
-	 * Returns:
-	 *  - true if and only if all edges were removed.
-	 */
-	virtual bool removeNeighbors(const int& v) {
-		auto query = _vertices.find(v);
-		if(query != _vertices.end()) {
-			V* vertex = query->second;
-			_edgeCount -= vertex->outdegree();
-			vertex->clearEdges();
-			return true;
-		}
-		return false;
-	};
-
-	/*
-	 * The specified vertex has edges from it removed.
-	 * WRITE operation.
-	 * Parameters:
-	 *  - v : vertex
-	 * Returns:
-	 *  - true if and only if all edges were removed.
-	 */
-	virtual bool removeNeighbors(const int&& v) {
-		return removeNeighbors(v);
-	}
-
-	/*
-	 * Removes all vertices and edges from the graph.
-	 * WRITE operation. 
-	 */
-	virtual void clear() {
-		for(auto v : _vertices) {
-			delete v.second;
-		}
-		_vertices.clear();
-		_edgeCount = 0;
-	}
-};
 
 }
 

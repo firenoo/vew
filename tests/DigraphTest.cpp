@@ -3,8 +3,8 @@
 #include <cassert>
 #include <iostream>
 #include "digraph.hpp"
-#include "presets.hpp"
-#include "search.hpp"
+// #include "presets.hpp"
+// #include "search.hpp"
 namespace firenoo {
 
 //Test Suite
@@ -80,10 +80,10 @@ void digraph_2() {
 
 void testSuite1();
 void testSuite2();
-void testdfs_cc();
-void testdfs_full();
-void testReversal();
-void test_top_sort();
+// void testdfs_cc();
+// void testdfs_full();
+// void testReversal();
+// void test_top_sort();
 /*
  * Test Suite 1 - basic functions
  * - add vertex
@@ -103,77 +103,77 @@ void testSuite1() {
  * - dfs 2
  * - top sort
  */
-void testSuite2() {
-	testdfs_cc();
-	testdfs_full();
-	test_top_sort();
-}
+// void testSuite2() {
+// 	testdfs_cc();
+// 	testdfs_full();
+// 	test_top_sort();
+// }
 
-void testdfs_cc() {
-	DirectedGraph<int> g;
-	g.addVertex(0);
-	g.addVertex(1);
+// void testdfs_cc() {
+// 	DirectedGraph<int> g;
+// 	g.addVertex(0);
+// 	g.addVertex(1);
 
-	g.addEdge(0, 1, 1.0);
-	auto dfs = dfs_cc<int>(g, {});
-	assert(dfs.size() == 1);
-	auto comp = *dfs[0];
-	assert(comp.size() == 2);
-	for(auto v : comp) {
-		assert(g.hasVertex(v->get()));
-	}
-	delete dfs[0];
-}
+// 	g.addEdge(0, 1, 1.0);
+// 	auto dfs = dfs_cc<int>(g, {});
+// 	assert(dfs.size() == 1);
+// 	auto comp = *dfs[0];
+// 	assert(comp.size() == 2);
+// 	for(auto v : comp) {
+// 		assert(g.hasVertex(v->get()));
+// 	}
+// 	delete dfs[0];
+// }
 
-void testdfs_full() {
-	DirectedGraph<int> g;
-	g.addVertex(0);
-	g.addVertex(1);
+// void testdfs_full() {
+// 	DirectedGraph<int> g;
+// 	g.addVertex(0);
+// 	g.addVertex(1);
 
-	g.addEdge(0, 1, 1.0);
-	auto dfs = dfs_cc<int>(g, {});
-	assert(dfs.size() == 1);
-	auto comp = *dfs[0];
-	assert(comp.size() == 2);
-	for(auto v : comp) {
-		assert(g.hasVertex(v->get()));
-	}
-	delete dfs[0];
-}
+// 	g.addEdge(0, 1, 1.0);
+// 	auto dfs = dfs_cc<int>(g, {});
+// 	assert(dfs.size() == 1);
+// 	auto comp = *dfs[0];
+// 	assert(comp.size() == 2);
+// 	for(auto v : comp) {
+// 		assert(g.hasVertex(v->get()));
+// 	}
+// 	delete dfs[0];
+// }
 
-void testReversal(){
-	DirectedGraph<int> g;
-	const double WEIGHT = 0;
-	g.addVertex(0);
-	g.addVertex(1);
-	g.addVertex(2);
+// void testReversal(){
+// 	DirectedGraph<int> g;
+// 	const double WEIGHT = 0;
+// 	g.addVertex(0);
+// 	g.addVertex(1);
+// 	g.addVertex(2);
 
-	g.addEdge(0, 1, WEIGHT);
-	g.addEdge(0, 2, WEIGHT);
-	g.addEdge(1, 2, WEIGHT);
+// 	g.addEdge(0, 1, WEIGHT);
+// 	g.addEdge(0, 2, WEIGHT);
+// 	g.addEdge(1, 2, WEIGHT);
 
-	DirectedGraph<int> gr = g.r();
-	assert(gr.hasEdge(1, 0));
-	assert(gr.hasEdge(2, 1));
-	assert(gr.hasEdge(2, 0));
-}
+// 	DirectedGraph<int> gr = g.reverse();
+// 	assert(gr.hasEdge(1, 0));
+// 	assert(gr.hasEdge(2, 1));
+// 	assert(gr.hasEdge(2, 0));
+// }
 
-void test_top_sort() {
-	DirectedGraph<int> g;
-	const double WEIGHT = 0;
-	for(unsigned int i = 0; i < 10; ++i) {
-		g.addVertex(i);
-	}
-	for(unsigned int i = 0; i < 9; ++i) {
-		g.addEdge(i, i+1, WEIGHT);
-	}
-	auto sort = firenoo::top_sort(g);
-	int i = 0;
-	for(auto it = sort.begin(); it != sort.end(); ++it) {
-		assert(it->_vertex->get() == i);
-		i++;
-	}
-}
+// void test_top_sort() {
+// 	DirectedGraph<int> g;
+// 	const double WEIGHT = 0;
+// 	for(unsigned int i = 0; i < 10; ++i) {
+// 		g.addVertex(i);
+// 	}
+// 	for(unsigned int i = 0; i < 9; ++i) {
+// 		g.addEdge(i, i+1, WEIGHT);
+// 	}
+// 	auto sort = firenoo::top_sort(g);
+// 	int i = 0;
+// 	for(auto it = sort.begin(); it != sort.end(); ++it) {
+// 		assert(it->_vertex->get() == i);
+// 		i++;
+// 	}
+// }
 
 }
 
@@ -181,5 +181,4 @@ void test_top_sort() {
 int main() {
 	firenoo::test::testSuite1();
 	// firenoo::test::testSuite2();
-	// firenoo::DirectedGraph<int> g;
 }

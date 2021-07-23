@@ -6,24 +6,29 @@ INC = -Isrc/graph -Isrc/algorithm
 DEST = out
 SRC = src
 
-TEST = out/tests/DigraphTest.o out/tests/UdigraphTest.o
-_LIBGRAPH = digraph.hpp vertexw.hpp
-_ALGOS = presets.hpp search.hpp disjointset.cpp
+
+DISJOINTSET = out/disjointset/disjointset.o
+TEST = out/tests/DigraphTest #out/tests/UdigraphTest
+_LIBGRAPH = digraph.hpp
+# _ALGOS = presets.hpp search.hpp
 LIBGRAPH = $(_LIBGRAPH:%=$(SRC)/graph/%)
 ALGOS = $(_ALGOS:%=$(SRC)/algorithm/%)
 all: clean test
 
 test: $(TEST)
 
-Example.o : tests/Example.cpp src/algorithm/disjointset.cpp
+digraphtest: $(TEST)
+
+Example.o : tests/Example.cpp disjointset
 	$(CXX) -o $@ $(CXXFLAGS) $(INC) $< src/algorithm/disjointset.cpp
 
+disjointset: $(DISJOINTSET)
 
-# $(TEST): $(_TESTS) $(_LIBGRAPH)
-# 	$(CXX) -o $@ $(CXXFLAGS) $(INC) $< $(LIBGRAPH)
+$(DISJOINTSET): src/algorithm/disjointset.cpp
+	$(CXX) -c -o $@ $(CXXFLAGS) -Isrc/algorithm $<
 
-$(TEST): $(DEST)/tests/%.o: tests/%.cpp $(LIBGRAPH) $(ALGOS)
-	$(CXX) -o $@ $(CXXFLAGS) $(INC) $< $(LIBGRAPH) $(ALGOS)
+$(TEST): $(DEST)/tests/%: tests/%.cpp disjointset $(LIBGRAPH) 
+	$(CXX) -o $@ $(CXXFLAGS) $(INC) $< $(DISJOINTSET) $(LIBGRAPH) 
 
 .PHONY: clean
 clean:
