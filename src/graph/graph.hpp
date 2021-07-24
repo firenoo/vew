@@ -6,6 +6,7 @@
 	#include <optional>
 	#include <memory>
 	#include <type_traits>
+	#include <vector>
 /*
  * Author: firenoo
  * File created on 2021/04/21
@@ -66,11 +67,12 @@ namespace firenoo {
 		class Vertex {
 		protected:
 			T m_obj;
+			Graph* const m_g;
 		public:
-			using iterator = typename std::unordered_map<Vertex*, W>::iterator;
 			
-			Vertex(const T& obj) :
-				m_obj(obj) {}
+			Vertex(const T& obj, Graph* g) :
+				m_obj(obj),
+				m_g(g) {}
 			
 			T& get() {
 				return m_obj;
@@ -84,13 +86,12 @@ namespace firenoo {
 				return &m_obj;
 			}
 
-
-			iterator begin() {
-				return m_edges[this].begin();
+			auto begin() const {
+				return m_g->m_edges.find(m_g->m_vertices.at(m_obj).get())->second.begin();
 			}
 
-			iterator end() {
-				return m_edges[this].end();
+			auto end() const {
+				return m_g->m_edges.find(m_g->m_vertices.at(m_obj).get())->second.end();
 			}
 		};
 		
@@ -107,7 +108,7 @@ namespace firenoo {
 				return m_v2;
 			}
 
-			W& weight() {
+			const W& weight() const {
 				return m_weight;
 			}
 		};
@@ -115,8 +116,7 @@ namespace firenoo {
 		Graph() {}
 
 		virtual ~Graph() {
-			m_vertices.clear();
-			m_edges.clear();
+			clear();
 		}
 
 	//READ operations
@@ -167,7 +167,7 @@ namespace firenoo {
 		* Returns:
 		*  - true if and only if the vertex object exists in this graph
 		*/
-		virtual bool hasVertex(const T&& v) const {
+		bool hasVertex(const T&& v) const {
 			return hasVertex(v);
 		};
 
@@ -205,7 +205,7 @@ namespace firenoo {
 		* Returns:
 		*  - true if and only if the edge (v1, v2) exists in this graph
 		*/
-		virtual bool hasEdge(const T& v1, const T&& v2) const {
+		bool hasEdge(const T& v1, const T&& v2) const {
 			return hasEdge(v1, v2);
 		}	
 		/*
@@ -218,7 +218,7 @@ namespace firenoo {
 		* Returns:
 		*  - true if and only if the edge (v1, v2) exists in this graph
 		*/
-		virtual bool hasEdge(const T&& v1, const T& v2) const {
+		bool hasEdge(const T&& v1, const T& v2) const {
 			return hasEdge(v1, v2);
 		}	
 		/*
@@ -231,7 +231,7 @@ namespace firenoo {
 		* Returns:
 		*  - true if and only if the edge (v1, v2) exists in this graph
 		*/
-		virtual bool hasEdge(const T&& v1, const T&& v2) const {
+		bool hasEdge(const T&& v1, const T&& v2) const {
 			return hasEdge(v1, v2);
 		}
 
@@ -261,15 +261,15 @@ namespace firenoo {
 			return {};
 		}
 
-		virtual std::optional<W> getEdge(const T& v1, const T&& v2) const {
+		std::optional<W> getEdge(const T& v1, const T&& v2) const {
 			return getEdge(v1, v2);
 		}
 
-		virtual std::optional<W> getEdge(const T&& v1, const T& v2) const {
+		std::optional<W> getEdge(const T&& v1, const T& v2) const {
 			return getEdge(v1, v2);
 		}
 
-		virtual std::optional<W> getEdge(const T&& v1, const T&& v2) const {
+		std::optional<W> getEdge(const T&& v1, const T&& v2) const {
 			return getEdge(v1, v2);
 		}
 
@@ -319,8 +319,7 @@ namespace firenoo {
 		*/
 		virtual bool addVertex(const T& v) {
 			if(!hasVertex(v)) {
-				
-				m_vertices[v] = std::make_unique<Vertex>(v);
+				m_vertices[v] = std::make_unique<Vertex>(v, this);
 				m_edges[m_vertices[v].get()] = std::vector<Edge>();
 				return true;
 			}
@@ -337,20 +336,20 @@ namespace firenoo {
 		*  - a pointer to the new vertex if it was created, or a pointer to the 
 		*    existing vertex.
 		*/
-		virtual bool addVertex(const T&& v) {
+		bool addVertex(const T&& v) {
 			return addVertex(v);
 		};
 
 		/*
-		* Removes the specified vertex from the graph.
-		* 
-		* WRITE operation.
-		* Parameters:
-		*  - v : vertex to remove from the graph.
-		* Returns:
-		*  - a pointer to the vertex that was removed, or nullptr if no vertex was
-		*    removed
-		*/
+		 * Removes the specified vertex from the graph.
+		 * 
+		 * WRITE operation.
+		 * Parameters:
+		 *  - v : vertex to remove from the graph.
+		 * Returns:
+		 *  - a pointer to the vertex that was removed, or nullptr if no vertex was
+		 *    removed
+		 */
 		virtual bool removeVertex(const T& v) {
 			if(hasVertex(v)) {
 				Vertex* vptr = m_vertices[v].get();
@@ -365,39 +364,39 @@ namespace firenoo {
 		}
 
 		/*
-		* Removes the specified vertex from the graph. 
-		* 
-		* WRITE operation.
-		* Parameters:
-		*  - v : vertex to remove from the graph.
-		* Returns:
-		*  - a pointer to the vertex that was removed, or nullptr if no vertex was
-		*    removed
-		*/
-		virtual bool removeVertex(const T&& v) {
+		 * Removes the specified vertex from the graph. 
+		 * 
+		 * WRITE operation.
+		 * Parameters:
+		 *  - v : vertex to remove from the graph.
+		 * Returns:
+		 *  - a pointer to the vertex that was removed, or nullptr if no vertex was
+		 *    removed
+		 */
+		bool removeVertex(const T&& v) {
 			return removeVertex(v);
 		};
 
 		/*
-		* Adds a directed edge between the two specified vertices.
-		*
-		* WRITE operation.
-		* Parameters:
-		*  - v1 : source vertex
-		*  - v2 : sink vertex
-		*  -  w : edge weight
-		* 
-		* Returns:
-		*  - true if if the edge was added.
-		*  - false if one of the conditions are true:
-		*     1. an edge already exists between the vertices,
-		*     2. one or both vertices don't exist in the graph.
-		*/
+		 * Adds a directed edge between the two specified vertices.
+		 *
+		 * WRITE operation.
+		 * Parameters:
+		 *  - v1 : source vertex
+		 *  - v2 : sink vertex
+		 *  -  w : edge weight
+		 * 
+		 * Returns:
+		 *  - true if if the edge was added.
+		 *  - false if one of the conditions are true:
+		 *     1. an edge already exists between the vertices,
+		 *     2. one or both vertices don't exist in the graph.
+		 */
 		virtual bool addEdge(const T& v1, const T& v2, const W& w) {
 			auto vertex1 = getVertex(v1);
 			auto vertex2 = getVertex(v2);
 			if(vertex1 && vertex2 && !hasEdge(v1, v2)) {
-				m_edges[*vertex1].emplace_back(Edge(*vertex2, w));
+				m_edges[*vertex1].emplace_back(*vertex2, w);
 				++m_edgeCount;
 				return true;
 			}
@@ -405,103 +404,126 @@ namespace firenoo {
 		}
 
 		/*
-		* Adds a directed edge between the two specified vertices.
-		*
-		* WRITE operation.
-		* Parameters:
-		*  - v1 : source vertex
-		*  - v2 : sink vertex
-		*  -  w : edge weight
-		* 
-		* Returns:
-		*  - true if if the edge was added.
-		*  - false if one of the conditions are true:
-		*     1. an edge already exists between the vertices,
-		*     2. one or both vertices don't exist in the graph.
-		*/
-		virtual bool addEdge(const T& v1, const T&& v2, W w) {
+		 * Adds a directed edge between the two specified vertices.
+		 *
+		 * WRITE operation.
+		 * Parameters:
+		 *  - v1 : source vertex
+		 *  - v2 : sink vertex
+		 *  -  w : edge weight
+		 * 
+		 * Returns:
+		 *  - true if if the edge was added.
+		 *  - false if one of the conditions are true:
+		 *     1. an edge already exists between the vertices,
+		 *     2. one or both vertices don't exist in the graph.
+		 */
+		bool addEdge(const T& v1, const T&& v2, W w) {
 			return addEdge(v1, v2, w);
 		}
 
 		/*
-		* Adds a directed edge between the two specified vertices.
-		*
-		* WRITE operation.
-		* Parameters:
-		*  - v1 : source vertex
-		*  - v2 : sink vertex
-		*  -  w : edge weight
-		* 
-		* Returns:
-		*  - true if if the edge was added.
-		*  - false if one of the conditions are true:
-		*     1. an edge already exists between the vertices,
-		*     2. one or both vertices don't exist in the graph.
-		*/
-		virtual bool addEdge(const T&& v1, const T& v2, W w) {
+		 * Adds a directed edge between the two specified vertices.
+		 *
+		 * WRITE operation.
+		 * Parameters:
+		 *  - v1 : source vertex
+		 *  - v2 : sink vertex
+		 *  -  w : edge weight
+		 * 
+		 * Returns:
+		 *  - true if if the edge was added.
+		 *  - false if one of the conditions are true:
+		 *     1. an edge already exists between the vertices,
+		 *     2. one or both vertices don't exist in the graph.
+		 */
+		bool addEdge(const T&& v1, const T& v2, W w) {
 			return addEdge(v1, v2, w);
 		}
 
 		/*
-		* Adds a directed edge between the two specified vertices.
-		*
-		* WRITE operation.
-		* Parameters:
-		*  - v1 : source vertex
-		*  - v2 : sink vertex
-		*  -  w : edge weight
-		* 
-		* Returns:
-		*  - true if if the edge was added.
-		*  - false if one of the conditions are true:
-		*     1. an edge already exists between the vertices,
-		*     2. one or both vertices don't exist in the graph.
-		*/
-		virtual bool addEdge(const T&& v1, const T&& v2, W w) {
+		 * Adds a directed edge between the two specified vertices.
+		 *
+		 * WRITE operation.
+		 * Parameters:
+		 *  - v1 : source vertex
+		 *  - v2 : sink vertex
+		 *  -  w : edge weight
+		 * 
+		 * Returns:
+		 *  - true if if the edge was added.
+		 *  - false if one of the conditions are true:
+		 *     1. an edge already exists between the vertices,
+		 *     2. one or both vertices don't exist in the graph.
+		 */
+		bool addEdge(const T&& v1, const T&& v2, W w) {
 			return addEdge(v1, v2, w);
 		}
 
 		/*
-		* Removes the specified edge from the graph.
-		*
-		* WRITE operation.
-		* Parameters:
-		*  - v1 : source vertex
-		*  - v2 : sink vertex
-		* Returns:
-		*  - true if and only if an edge was removed.
-		*/
+		 * Removes the specified edge from the graph.
+		 *
+		 * WRITE operation.
+		 * Parameters:
+		 *  - v1 : source vertex
+		 *  - v2 : sink vertex
+		 * Returns:
+		 *  - true if and only if an edge was removed.
+		 */
 		virtual bool removeEdge(const T& v1, const T& v2) = 0;
 
 		/*
-		* Removes the specified edge from the graph.
-		*
-		* WRITE operation.
-		* Parameters:
-		*  - v1 : source vertex
-		*  - v2 : sink vertex
-		* Returns:
-		*  - true if and only if an edge was removed.
-		*/
-		virtual bool removeEdge(const T&& v1, const T&& v2) {
+		 * Removes the specified edge from the graph.
+		 *
+		 * WRITE operation.
+		 * Parameters:
+		 *  - v1 : source vertex
+		 *  - v2 : sink vertex
+		 * Returns:
+		 *  - true if and only if an edge was removed.
+		 */
+		bool removeEdge(const T& v1, const T&& v2) {
+			return removeEdge(v1, v2);
+		}
+		
+		/*
+		 * Removes the specified edge from the graph.
+		 *
+		 * WRITE operation.
+		 * Parameters:
+		 *  - v1 : source vertex
+		 *  - v2 : sink vertex
+		 * Returns:
+		 *  - true if and only if an edge was removed.
+		 */
+		bool removeEdge(const T&& v1, const T& v2) {
 			return removeEdge(v1, v2);
 		}
 
-		
+		/*
+		 * Removes the specified edge from the graph.
+		 *
+		 * WRITE operation.
+		 * Parameters:
+		 *  - v1 : source vertex
+		 *  - v2 : sink vertex
+		 * Returns:
+		 *  - true if and only if an edge was removed.
+		 */
+		bool removeEdge(const T&& v1, const T&& v2) {
+			return removeEdge(v1, v2);
+		}
 
 		/*
 		 * Removes all vertices and edges from the graph.
 		 * WRITE operation. 
 		 */
-		virtual void clear() {
+		void clear() {
 			m_vertices.clear();
 			m_edges.clear();
 			m_edgeCount = 0;
 		}
 	};
-
-
-
 }
 
 #endif

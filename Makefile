@@ -8,8 +8,8 @@ SRC = src
 
 
 DISJOINTSET = out/disjointset/disjointset.o
-TEST = out/tests/DigraphTest #out/tests/UdigraphTest
-_LIBGRAPH = digraph.hpp
+TEST = out/tests/DigraphTest out/tests/UdigraphTest
+_LIBGRAPH = digraph.hpp udigraph.hpp
 # _ALGOS = presets.hpp search.hpp
 LIBGRAPH = $(_LIBGRAPH:%=$(SRC)/graph/%)
 ALGOS = $(_ALGOS:%=$(SRC)/algorithm/%)
@@ -17,7 +17,9 @@ all: clean test
 
 test: $(TEST)
 
-digraphtest: $(TEST)
+digraphtest: out/tests/DigraphTest
+
+udigraphtest: out/tests/UdigraphTest
 
 Example.o : tests/Example.cpp disjointset
 	$(CXX) -o $@ $(CXXFLAGS) $(INC) $< src/algorithm/disjointset.cpp

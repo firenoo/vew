@@ -1,7 +1,8 @@
-#ifndef _FN_GRAPHW
-    #define _FN_GRAPHW
-	#include <stack>
+#ifndef _FN_DIRECTED_GRAPH
+    #define _FN_DIRECTED_GRAPH
+	#include <memory>
 	#include <unordered_set>
+	#include <stack>
 	#include "graph.hpp"
 /*
  * Author: firenoo
@@ -42,6 +43,10 @@ namespace firenoo {
 		*/
 		DirectedGraph() : Graph() {}
 		
+		~DirectedGraph() {
+			this->clear();
+			m_backedges.clear();
+		}
 	// READ operation
 
 		/*
@@ -93,10 +98,10 @@ namespace firenoo {
 
 		bool addVertex(const T& v) override {
 			if(auto vertex = this->m_vertices.find(v); vertex == this->m_vertices.end()) {
-				this->m_vertices[v] = std::make_unique<Vertex>(v);
+				this->m_vertices[v] = std::make_unique<Vertex>(v, this);
 				Vertex* vptr = this->m_vertices[v].get();
-				this->m_edges[vptr] = std::vector<Edge>();
-				m_backedges[vptr] = std::unordered_set<Vertex*>();
+				this->m_edges[vptr] = {};
+				m_backedges[vptr] = {};
 				return true;
 			}
 			return false;
@@ -106,7 +111,7 @@ namespace firenoo {
 			auto vertex_1 = this->getVertex(v1);
 			auto vertex_2 = this->getVertex(v2);
 			if(vertex_1 && vertex_2 && !hasEdge(v1, v2)) {
-				this->m_edges[*vertex_1].emplace_back(Edge(*vertex_2, w));
+				this->m_edges[*vertex_1].emplace_back(*vertex_2, w);
 				m_backedges[*vertex_2].insert(*vertex_1);
 				++this->m_edgeCount;
 				return true;
@@ -186,7 +191,7 @@ namespace firenoo {
 		* Returns:
 		*  - true if and only if the edges were added.
 		*/
-		virtual bool addBiEdge(const T& v1, const T&& v2, W w) {
+		bool addBiEdge(const T& v1, const T&& v2, W w) {
 			return addBiEdge(v1, v2, w);
 		}
 
@@ -204,7 +209,7 @@ namespace firenoo {
 		* Returns:
 		*  - true if and only if the edges were added.
 		*/
-		virtual bool addBiEdge(const T&& v1, const T& v2, W w) {
+		bool addBiEdge(const T&& v1, const T& v2, W w) {
 			return addBiEdge(v1, v2, w);
 		}
 
@@ -226,10 +231,8 @@ namespace firenoo {
 			return addBiEdge(v1, v2, w);
 		}
 
+		#undef Graph
 	};
-
-	#undef Graph
-
 }
 
 #endif
