@@ -74,15 +74,15 @@ namespace firenoo {
 				m_obj(obj),
 				m_g(g) {}
 			
-			T& get() {
+			inline T& get() {
 				return m_obj;
 			}
 
-			T& operator*() {
+			inline T& operator*() {
 				return m_obj;
 			}
 
-			T* operator->() {
+			inline T* operator->() {
 				return &m_obj;
 			}
 
@@ -96,16 +96,16 @@ namespace firenoo {
 		};
 		
 		class Edge {
-			Vertex* m_v2;
+			Vertex* m_target;
 			W m_weight;
 
 		public:
-			Edge(Vertex* v2, const W& weight) :
-				m_v2(v2),
+			Edge(Vertex* target, const W& weight) :
+				m_target(target),
 				m_weight(weight) {}
 
-			Vertex* vertex_2() {
-				return m_v2;
+			Vertex* target() {
+				return m_target;
 			}
 
 			const W& weight() const {
@@ -129,7 +129,7 @@ namespace firenoo {
 		*  - an unsigned integer representing the total number of vertices
 		*    stored in the graph.
 		*/
-		std::size_t vertexCount() const noexcept {
+		inline std::size_t vertexCount() const noexcept {
 			return m_vertices.size();
 		};
 		
@@ -141,7 +141,7 @@ namespace firenoo {
 		*  - an integer representing the total number of edges in
 		*    the graph.
 		*/
-		std::size_t edgeCount() const noexcept {
+		inline std::size_t edgeCount() const noexcept {
 			return m_edgeCount;
 		};
 
@@ -154,7 +154,7 @@ namespace firenoo {
 		* Returns:
 		*  - true if and only if the vertex object exists in this graph
 		*/
-		virtual bool hasVertex(const T& v) const {
+		virtual inline bool hasVertex(const T& v) const {
 			return m_vertices.find(v) != m_vertices.end();
 		};
 
@@ -187,7 +187,7 @@ namespace firenoo {
 			if(vert1 && vert2) {
 				auto v1_edges = m_edges.at(*vert1);
 				for(auto edge : v1_edges) {
-					if(edge.vertex_2() == vert2) {
+					if(edge.target() == vert2) {
 						return true;
 					}
 				}
@@ -253,7 +253,7 @@ namespace firenoo {
 				auto v1_edges = m_edges.at(*vert1);
 				//O(n)
 				for(auto edge : v1_edges) {
-					if(edge.vertex_2() == *vert2) {
+					if(edge.target() == *vert2) {
 						return edge.weight();
 					}
 				}
@@ -296,11 +296,13 @@ namespace firenoo {
 		 * Returns:
 		 *  - a vector that has all edges of the graph
 		 */
-		virtual std::vector<Edge> edges() const {
-			std::vector<Edge> result;
+		virtual std::vector<std::pair<Vertex*, Edge>> edges() const {
+			std::vector<std::pair<Vertex*, Edge>> result;
 			result.reserve(m_edges.size());
-			for(auto& [vertex, edges] : m_edges) {
-				result.insert(result.end(), edges.begin(), edges.end());
+			for(auto& [vertex, edgeList] : m_edges) {
+				for(auto& edge : edgeList) {
+					result.emplace_back(vertex, edge);
+				}
 			}
 			return result;
 		}
@@ -320,7 +322,7 @@ namespace firenoo {
 		virtual bool addVertex(const T& v) {
 			if(!hasVertex(v)) {
 				m_vertices[v] = std::make_unique<Vertex>(v, this);
-				m_edges[m_vertices[v].get()] = std::vector<Edge>();
+				m_edges[m_vertices[v].get()] = {};
 				return true;
 			}
 			return false;

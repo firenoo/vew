@@ -53,35 +53,44 @@ namespace firenoo {
 		* Creates a clone of this graph, reverses the clone's edges, and returns
 		* the clone.
 		* 
+		* Note about the implementation: I tried to use return by value, only to
+		* get compiler errors by copying `std::unique_ptr`. That's probably 
+		* because I'm using -O0 for debugging. 
+		* Parameter:
+		*  - a directed graph to copy into. The graph must be empty, lest there
+		*    be undefined behavior.
 		* Returns:
 		*  - A directed graph that contains all vertices of this graph but
 		*    its edges are all reversed.
 		*/
-		DirectedGraph reverse() const {
-			DirectedGraph result;
-			if(Graph::vertexCount() <= 0) return result;
+		void reverse(DirectedGraph& result) const {
+
+			if(this->vertexCount() <= 0) return;
 			//Run DFS, adding edges as we go.
-			std::stack<Vertex*> work_stack;
-			std::unordered_set<Vertex*> visited;
-			for(auto &[key, vertex] : this->m_vertices) {
-				work_stack.push(&vertex);
-				result.addVertex(&vertex);
+			std::stack<Vertex*> work_stack = {};
+			std::unordered_set<Vertex*> visited = {};
+			visited.reserve(this->vertexCount());
+			for(auto &[key, vptr] : this->m_vertices) {
+				if(visited.find(vptr.get()) != visited.end()) continue;
+				work_stack.push(vptr.get());
+				result.addVertex(key);
+				visited.insert(vptr.get());
 				while(!work_stack.empty()) {
-					Vertex* vertex = work_stack.top();
+					Vertex* nextVertex = work_stack.top();
 					work_stack.pop();
-					for(auto &[type, neighbor] : *vertex) {
-						if(visited.find(&neighbor) == visited.end()) {
-							visited.insert(vertex);
-							work_stack.push(&neighbor);
-							result.addVertex(type);
+					for(auto& edge : *nextVertex) {
+						auto t = **(edge.target());
+						if(visited.find(edge.target()) == visited.end()) {
+							visited.insert(edge.target());
+							work_stack.push(edge.target());
+							result.addVertex(t);
 						}
 						//Add edges and backedges
-						W w = this->getEdge(key, type);
-						result.addEdge(type, key);
+						auto w = this->getEdge(**nextVertex, t);
+						result.addEdge(t, **nextVertex, *w);
 					}
 				}
 			}
-			return result;		
 		}
 
 		bool hasEdge(const T& v1, const T& v2) const override {
@@ -108,11 +117,11 @@ namespace firenoo {
 		}
 
 		bool addEdge(const T& v1, const T& v2, const W& w) override {
-			auto vertex_1 = this->getVertex(v1);
-			auto vertex_2 = this->getVertex(v2);
-			if(vertex_1 && vertex_2 && !hasEdge(v1, v2)) {
-				this->m_edges[*vertex_1].emplace_back(*vertex_2, w);
-				m_backedges[*vertex_2].insert(*vertex_1);
+			auto vertex1 = this->getVertex(v1);
+			auto vertex2 = this->getVertex(v2);
+			if(vertex1 && vertex2 && !hasEdge(v1, v2)) {
+				this->m_edges[*vertex1].emplace_back(*vertex2, w);
+				m_backedges[*vertex2].insert(*vertex1);
 				++this->m_edgeCount;
 				return true;
 			}
@@ -124,7 +133,7 @@ namespace firenoo {
 			if(vertex) {
 				//Delete edges from this vertex
 				for(auto& edge : this->m_edges[*vertex]) {
-					m_backedges[edge.vertex_2()].erase(*vertex);
+					m_backedges[edge.target()].erase(*vertex);
 					--this->m_edgeCount;
 				}
 				this->m_edges.erase(*vertex);
@@ -145,7 +154,7 @@ namespace firenoo {
 			if(hasEdge(v1, v2)) {
 				std::vector<Edge> v1_edges = this->m_edges[*vertex1];
 				for(auto it = v1_edges.begin(); it != v1_edges.end(); ++it) {
-					if(it->vertex_2() == *vertex2) {
+					if(it->target() == *vertex2) {
 						v1_edges.erase(it);
 						break;
 					}

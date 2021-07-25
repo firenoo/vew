@@ -120,7 +120,7 @@ public:
 		if(vertex) {
 			//delete all vertices
 			for(auto& edge : **vertex) { 
-				this->removeEdge(v, **(edge.vertex_2()));
+				this->removeEdge(v, **(edge.target()));
 			}
 			return true;
 		}
@@ -138,10 +138,10 @@ public:
 			this->m_edges[*vertex1].erase((*vertex1)->begin() + index1);
 			this->m_edges[*vertex2].erase((*vertex2)->begin() + index2);
 			for(auto it = (*vertex1)->begin() + index1; it != (*vertex1)->end(); ++it) {
-				m_edgeTracker[*vertex1][it->vertex_2()] -= 1;
+				m_edgeTracker[*vertex1][it->target()] -= 1;
 			}
 			for(auto it = (*vertex2)->begin() + index2; it != (*vertex2)->end(); ++it) {
-				m_edgeTracker[*vertex2][it->vertex_2()] -= 1;
+				m_edgeTracker[*vertex2][it->target()] -= 1;
 			}
 			--this->m_edgeCount;
 			return true;
