@@ -17,25 +17,10 @@ namespace firenoo {
 
 	/*
 	 * ---------------------------------------------------------------------------- 
-	 * Graph (Superclass)
+	 * Graph
 	 * ----------------------------------------------------------------------------
-	 * A representation of a mathematical graph object. Submembers of this class
-	 * are named with the following suffixes to indicate properties of each 
-	 * implementation.
-	 * 
-	 * Implementations should follow the behavior in the doucmentation. They can 
-	 * copy the docs here, but should include details such as memory allocation.
-	 * Any discrepency in behavior should be clearly documented.
-	 * 
-	 * Example: GraphU means that the graph implementation is unweighted, does not
-	 * multigraphs, and does not allow self-loops. In other words, it is a simple,
-	 * directed, unweighted graph.
-	 *  
-	 * The suffix order should respect the list below. 
-	 * 1. U / W - unweighted/weighted (must be one or the other)
-	 * 4. B - undirected (edges are bidirectional, optional)
-	 * 2. M - multigraph (multiple edges to the same vertex, optional)
-	 * 3. L - self-loops (edges from a vertex to itself, optional)
+	 * A representation of a simple graph, which is a collections of vertices, V,
+	 * and a collection edges E. Loops and multiedges are not supported.
 	 * 
 	 * Template Args:
 	 * T - type of each vertex

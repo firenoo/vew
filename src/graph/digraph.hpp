@@ -169,8 +169,6 @@ namespace firenoo {
 		/*
 		* Adds two edges (v1, v2) and (v2, v1) to the graph.
 		* 
-		* Memory: No memory is allocated nor freed.
-		* 
 		* WRITE operation.
 		* Parameters:
 		*  - v1 : source vertex
@@ -189,8 +187,6 @@ namespace firenoo {
 		/*
 		* Adds two edges (v1, v2) and (v2, v1) to the graph.
 		* 
-		* Memory: No memory is allocated nor freed.
-		* 
 		* WRITE operation.
 		* Parameters:
 		*  - v1 : source vertex
@@ -206,8 +202,6 @@ namespace firenoo {
 
 		/*
 		* Adds two edges (v1, v2) and (v2, v1) to the graph.
-		* 
-		* Memory: No memory is allocated nor freed.
 		* 
 		* WRITE operation.
 		* Parameters:
