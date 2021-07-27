@@ -10,7 +10,6 @@
  */
 namespace firenoo {
 
-
 	/*
 	 * ----------------------------------------------------------------------------
 	 * DirectedGraph
@@ -64,7 +63,6 @@ namespace firenoo {
 		*    its edges are all reversed.
 		*/
 		void reverse(DirectedGraph& result) const {
-
 			if(this->vertexCount() <= 0) return;
 			//Run DFS, adding edges as we go.
 			std::stack<Vertex*> work_stack = {};
@@ -132,16 +130,24 @@ namespace firenoo {
 			auto vertex = this->getVertex(v);
 			if(vertex) {
 				//Delete edges from this vertex
-				for(auto& edge : this->m_edges[*vertex]) {
-					m_backedges[edge.target()].erase(*vertex);
-					--this->m_edgeCount;
+				for(auto& neighbor : **vertex) {
+					m_backedges[neighbor.target()].erase(*vertex);
 				}
-				this->m_edges.erase(*vertex);
 				//Delete edges to this vertex
-				for(auto& b_vertex : m_backedges[*vertex]) {
-					removeEdge(**b_vertex, v);
+				auto& b_edges = m_backedges[*vertex];
+				//Iterate through backedges. typeof(b_edge) = Vertex* iterator
+				for(auto b_edge = b_edges.begin(); b_edge != b_edges.end(); ++b_edge) {
+					//Find the edge in the edge list. typeof(it) = Edge iterator
+					for(auto it = (*b_edge)->begin(); it != (*b_edge)->end(); ++it) {
+						if(it->target() == *vertex) {
+							this->m_edges[*b_edge].erase(it); //delete when found
+						}
+						break;
+					}
 				}
+				//clean up
 				m_backedges.erase(*vertex);
+				this->m_edges.erase(*vertex);
 				this->m_vertices.erase(v);
 				return true;
 			}
@@ -149,12 +155,13 @@ namespace firenoo {
 		}
 
 		bool removeEdge(const T& v1, const T& v2) override {
-			auto vertex1 = this->getVertex(v1);
-			auto vertex2 = this->getVertex(v2);
 			if(hasEdge(v1, v2)) {
-				std::vector<Edge> v1_edges = this->m_edges[*vertex1];
+				auto vertex1 = this->getVertex(v1);
+				auto vertex2 = this->getVertex(v2);
+				auto& v1_edges = this->m_edges[*vertex1];
 				for(auto it = v1_edges.begin(); it != v1_edges.end(); ++it) {
 					if(it->target() == *vertex2) {
+						m_backedges[*vertex2].erase(*vertex1);
 						v1_edges.erase(it);
 						break;
 					}
@@ -164,7 +171,6 @@ namespace firenoo {
 			}
 			return false;
 		}
-
 
 		/*
 		* Adds two edges (v1, v2) and (v2, v1) to the graph.

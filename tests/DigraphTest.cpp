@@ -91,8 +91,8 @@ void digraph_1() {
 		std::printf("(%d, %d)", **v, **(e.target()));
 	}
 	std::printf("\n");
-	
-	//Reverse	
+	///////////////////////////////////////////////////////////////////////////
+	//Reverse tests.
 	DirectedGraph<int> gr;
 	g.reverse(gr);
 	auto verticesr = gr.vertices();
@@ -139,20 +139,32 @@ void digraph_1() {
 	assert(gr.getEdge(6, 3).value() == 7.0);
 	assert(gr.getEdge(3, 6));
 	assert(gr.getEdge(3, 6).value() == 2.0);
+	//Reverse tests end
+	///////////////////////////////////////////////////////////////////////////
 	//Remove edges
 	assert(g.removeEdge(0, 2));
 	assert(!g.removeEdge(8, 19));
 	assert(!g.removeEdge(0, C));
 	assert(!g.removeEdge(C, 0));
-
+	assert(!g.hasEdge(0, 2));
+	assert(!g.getEdge(0, 2));
+	
 	//Remove vertices
-
+	assert(g.removeVertex(0));
+	assert(!g.hasVertex(0));
+	assert(g.removeVertex(2));
+	assert(!g.hasVertex(2));
+	assert(!g.hasEdge(1, 2));
+	assert(!g.hasEdge(2, 5));
+	assert(!g.hasEdge(2, 4));
+	assert(g.edges().size() == 5);
+	assert(g.vertices().size() == 6);
+	assert(!g.removeVertex(0));
+	assert(!g.removeVertex(C));
 	//Clear
 	g.clear();
 	assert(g.edgeCount() == 0);
 	assert(g.vertexCount() == 0);
-	
-
 }
 
 void digraph_2() {
@@ -163,10 +175,40 @@ void digraph_2() {
 	
 	assert(g.removeVertex(2));
 	
+	g.addVertex(1);
+	g.addVertex(2);
+	g.addVertex(3);
+	//Add BiEdge
+	assert(g.hasVertex(2));
+	assert(g.addBiEdge(0, 1, 1.0));
+	const int A = 0, B = 2;
+	assert(g.addBiEdge(A, B, 2.0));
+	assert(g.addBiEdge(3, A, 3.0));
+	assert(g.addBiEdge(B, 3, 4.0));
+	assert(!g.addBiEdge(A, B, 1.0));
+	assert(!g.addBiEdge(3, A, 1.0));
+	assert(!g.addBiEdge(B, 3, 4.0));
+	//Remove Edge
+	assert(g.removeEdge(3, A));
+	assert(g.removeEdge(A, 3));	
+	assert(!g.hasEdge(3, A));
+	assert(!g.getEdge(3, A));
+	assert(!g.hasEdge(3, A));
+	assert(!g.getEdge(A, 3));
+	//Remove Vertex
+	assert(g.removeVertex(0));
+	assert(!g.hasVertex(0));
+	assert(!g.hasEdge(0, 1));
+	assert(!g.getEdge(0, 1));
+	assert(!g.hasEdge(1, 0));
+	assert(!g.getEdge(1, 0));
+	assert(!g.hasEdge(A, B));
+	assert(!g.getEdge(A, B));
+	assert(!g.hasEdge(B, A));
+	assert(!g.getEdge(B, A));
 }
 
 void testSuite1();
-void testSuite2();
 
 void testSuite1() {
 	digraph_1();
@@ -179,5 +221,4 @@ void testSuite1() {
 }
 int main() {
 	firenoo::test::testSuite1();
-	// firenoo::test::testSuite2();
 }
