@@ -49,13 +49,23 @@ namespace firenoo {
 		UndirectedGraph() : Graph() {}
 
 		UndirectedGraph(UndirectedGraph& other) : Graph(other) {
-			//TODO
-			assert(false);
+			for(auto &[vertex, edge_map] : other.m_edgeTracker) {
+				auto v1 = this->m_vertices[**vertex];
+				m_edgeTracker[v1] = {};
+				for(auto &[from, ind] : other.m_edgeTracker) {
+					auto v2 = this->m_vertices[**from];
+					m_edgeTracker[v1].insert(v2, ind);
+				}
+			}
 		}
 		
 		UndirectedGraph(UndirectedGraph&& other) : Graph(std::move(other)) {
-			//TODO
-			assert(false);
+			for(auto &[vertex, edge_map] : other.m_edgeTracker) {
+				m_edgeTracker[vertex] = {};
+				for(auto it = edge_map.begin(); it != edge_map.end(); /**/) {
+					m_edgeTracker[vertex].insert(std::move(edge_map.extract(it++)));
+				}
+			}
 		}
 		/*
 		 * Default destructor, must delete all vertices and edges.
