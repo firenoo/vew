@@ -47,7 +47,16 @@ namespace firenoo {
 		 * Default constructor. Creates an empty graph with no vertices or edges.
 		 */
 		UndirectedGraph() : Graph() {}
+
+		UndirectedGraph(UndirectedGraph& other) : Graph(other) {
+			//TODO
+			assert(false);
+		}
 		
+		UndirectedGraph(UndirectedGraph&& other) : Graph(std::move(other)) {
+			//TODO
+			assert(false);
+		}
 		/*
 		 * Default destructor, must delete all vertices and edges.
 		 */

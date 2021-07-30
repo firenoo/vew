@@ -1,8 +1,8 @@
 #ifndef _FN_GRAPH
     #define _FN_GRAPH 
+	#include <algorithm>
 	#include <cstddef>
 	#include <unordered_map>
-	#include <functional>
 	#include <optional>
 	#include <memory>
 	#include <type_traits>
@@ -72,11 +72,11 @@ namespace firenoo {
 			}
 
 			auto begin() const {
-				return m_g->m_edges.find(m_g->m_vertices.at(m_obj).get())->second.begin();
+				return m_g->m_edges.find(m_g->m_vertices.at(m_obj).get())->second.cbegin();
 			}
 
 			auto end() const {
-				return m_g->m_edges.find(m_g->m_vertices.at(m_obj).get())->second.end();
+				return m_g->m_edges.find(m_g->m_vertices.at(m_obj).get())->second.cend();
 			}
 		};
 		
@@ -89,7 +89,7 @@ namespace firenoo {
 				m_target(target),
 				m_weight(weight) {}
 
-			Vertex* target() {
+			Vertex* const target() const {
 				return m_target;
 			}
 
@@ -99,6 +99,31 @@ namespace firenoo {
 		};
 
 		Graph() {}
+
+		//copy
+		Graph(Graph& other) {
+			m_edgeCount = other.m_edgeCount;
+			for(auto &[t, vertex] : other.m_vertices) {
+				m_vertices[t] = std::make_unique<Vertex>(t, this);
+			}
+			m_edges.reserve(other.m_edges.size());
+			for(auto &[vertex, edge] : other.m_edges) {
+				auto& v1 = this->m_edges[**vertex];
+				auto& v2 = this->m_edges[**(edge.target())];
+				m_edges.emplace(v1, {v2, edge.weight()});
+			}
+		}
+
+		//move
+		Graph(Graph&& other) {
+			m_edgeCount = other.m_edgeCount;
+			for(auto &[t, vertex] : other.m_vertices) {
+				m_vertices[t] = std::move(vertex);
+			}
+			for(auto it = other.m_edges.begin(); it != other.m_edges.end();/**/) {
+				m_edges.insert(std::move(other.m_edges.extract(it++)));
+			}
+		}
 
 		virtual ~Graph() {
 			clear();
@@ -509,6 +534,14 @@ namespace firenoo {
 			m_vertices.clear();
 			m_edges.clear();
 			m_edgeCount = 0;
+		}
+
+		auto begin() {
+			return m_vertices.cbegin();
+		}
+
+		auto end() {
+			return m_vertices.cend();
 		}
 	};
 }

@@ -1,389 +1,318 @@
 #ifndef _FN_SEARCH
-	#define _FN_SEARCH 0
+	#define _FN_SEARCH
 	#define _FN_RESERVE_FACTOR 2
-	#include <cstdint>
+	#include <cstddef>
 	#include <vector>
 	#include <stack>
+	#include <tuple>
 	#include <algorithm>
 	#include "udigraph.hpp"
 	#include "digraph.hpp"
 	#include "disjointset.hpp"
-	//Directed Graph
-	#define DGraph DirectedGraph<T, W>
-	//Directed Graph Vertex
-	#define DVertex GraphVertexW<T, W>
-	//Directed Graph Component
-	#define DComponent std::unordered_set<GraphVertexW<T, W>*>
-	//Directed Graph DFS Component
-	#define DFullComp std::unordered_set<DFSResult<GraphVertexW<T, W>>, DFSHash<GraphVertexW<T, W>>>
-	//Directed Graph DFS Result
-	#define DDFSResult DFSResult<GraphVertexW<T, W>>
-
-
-	//Undirected Graph
-	#define UGraph UndirectedGraph<T, W>
-	#define UVertex GraphVertexWB<T, W>
-	#define UComponent std::unordered_set<GraphVertexWB<T, W>*>
-	#define UFullComp std::unordered_set<DFSResult<GraphVertexWB<T, W>>, DFSHash<GraphVertexWB<T, W>>>
-	#define UDFSResult DFSResult<GraphVertexWB<T, W>>
 
 namespace firenoo {
 
-//-----------------------------------------------------------------------------
-// DFS Result processing
-//-----------------------------------------------------------------------------
-
-
-/*
-	* The result of DFS searching. Includes pre- and post- numbers. 
-	*/
-template<typename V>
-struct DFSResult {
-	
-	//Default constructor
-	DFSResult(size_t pre, size_t post, V* vertex) : 
-		_pre(pre), 
-		_post(post),
-		_vertex(vertex) {}
-	
-	//Copy constructor
-	DFSResult(const DFSResult& other) :
-		_pre(other._pre),
-		_post(other._post),
-		_vertex(other._vertex) {}
-	
-	//Move constructor
-	DFSResult(DFSResult&& other) {
-		_pre = other._pre;
-		_post = other._post;
-		_vertex = other._vertex;
-
-		other._vertex = nullptr;
-	}
-
 	/*
-		* Pre-numbering
-		*/
-	size_t _pre = 0;
+	 * DFSPostCompare - Comparator for sorting post numbers
+	 * V - vertex type
+	 * Reverse - whether to sort from smallest to largest (false) or vice versa
+	 * (true)
+	 */
+	template <class GraphVertex, bool Reverse = false>
+	struct DFSPostCompare {};
 
-	/*
-		* Post-numbering
-		*/
-	size_t _post = 0;
-
-	/*
-		* Vertex. Do not delete, as we do not own this pointer.
-		*/
-	V* _vertex = nullptr;
-
-	//Copy assignment
-	DFSResult& operator=(const DFSResult<V>& other) noexcept {
-		if(this != &other) {
-			_pre = other._pre;
-			_post = other._post;
-			_vertex = other._vertex;
+	template <class GraphVertex>
+	struct DFSPostCompare<GraphVertex, true> {
+		bool operator()(
+			std::tuple<std::size_t, std::size_t, GraphVertex>& a, 
+			std::tuple<std::size_t, std::size_t, GraphVertex>& b) noexcept {
+			return std::get<1>(a) > std::get<1>(b);
 		}
-		return *this;
-	}
+	};
 
-	//Move assignment
-	DFSResult& operator=(DFSResult<V>&& other) noexcept {
-		if(this != &other) {
-			_pre = other._pre;
-			_post = other._post;
-			_vertex = other._vertex;
-
-			other._pre = 0;
-			other._post = 0;
-			other._vertex = nullptr;
+	template <class GraphVertex>
+	struct DFSPostCompare<GraphVertex, false> {
+		bool operator()(
+			std::tuple<std::size_t, std::size_t, GraphVertex>& a, 
+			std::tuple<std::size_t, std::size_t, GraphVertex>& b) noexcept {
+			return std::get<1>(a) < std::get<1>(b);
 		}
-		return *this;
-	}
-
-	//Equivalence operator
-	bool operator==(const DFSResult<V>& b) const noexcept {
-		return _pre == b._pre && _post == b._post && _vertex == b._vertex;
-	}
-
-};
-
-/*
-	* DFSPostCompare - Comparator for sorting post numbers
-	* V - vertex type
-	* Reverse - whether to sort from smallest to largest (false) or vice versa
-	* (true)
-	*/
-template <class V, bool Reverse = false>
-struct DFSPostCompare {};
-
-template <class V>
-struct DFSPostCompare<V, true> {
-	bool operator()(DFSResult<V>& a, DFSResult<V>& b) noexcept {
-		return a._post > b._post;
-	}
-};
-
-template<class V>
-struct DFSPostCompare<V, false> {
-	bool operator()(const DFSResult<V>& a, const DFSResult<V>& b) const noexcept {
-		return a._post < b._post;
-	}
-};
-
-/*
-	* DFSHash - class for creating a hash value for DFSResult.
-	*/
-template<class V>
-struct DFSHash {
-	size_t operator()(const DFSResult<V>& d) const noexcept {
-		return ((d._pre ^ reinterpret_cast<std::uintptr_t>(d._vertex) ) << 32) | 
-				(d._post ^ reinterpret_cast<std::uintptr_t>(d._vertex));
-	}
-};
-
-	
+	};
 
 //-----------------------------------------------------------------------------
-// Directed Graph
+// Directed Graph operations
 //-----------------------------------------------------------------------------
+	#define DGraph DirectedGraph<T, W, Hash, KeyEq>
+	/*
+	 * Perform depth-first search, keeping only information about
+	 * connected components.
+	 * 
+	 * Passing in vertices will suggest the order to run the search in.
+	 * Invalid vertices (e.g. vertices that don't belong to the graph) are
+	 * ignored/skipped, and remaining vertices are run in arbitrary order.
+	 * 
+	 * READ operation.
+	 * Parameters:
+	 *  - g : A DirectedGraph instance (weighted, directed graph)
+	 * Returns:
+	 *  - A std::vector, each element being another std::vector (a component)
+	 *    of vertices that are connected (in no particular order).
+	 */
+	template<class T, class W, class Hash, class KeyEq>
+	std::vector<std::vector<typename DGraph::Vertex*>> 
+	simpleDFS(const DGraph& g);
 
-/*
-	* Perform depth-first search, keeping only information about
-	* connected components.
-	* 
-	* Passing in vertices will suggest the order to run the search in.
-	* Invalid vertices (e.g. vertices that don't belong to the graph) are
-	* ignored/skipped, and remaining vertices are run in arbitrary order.
-	* 
-	* READ operation.
-	* Parameters:
-	*  - g : A DirectedGraph instance (weighted, directed graph)
-	* Returns:
-	*  - A std::vector, each element being another std::vector (a component)
-	*    of vertices that are connected (in no particular order). Note: each
-	*    component std::vector is allocated on the heap; it is the user's
-	*    responsibility to manage it.
-	*/ 
-template<class T, class W>
-std::vector<DComponent*> dfs_cc(const DGraph& g);
+	/*
+	 * Perform depth-first search, keeping only information about
+	 * connected components.
+	 * 
+	 * Passing in vertices will suggest the order to run the search in.
+	 * Invalid vertices (e.g. vertices that don't belong to the graph) are
+	 * ignored/skipped, and remaining vertices are run in arbitrary order.
+	 * 
+	 * READ operation.
+	 * Parameters:
+	 *  - g : A DirectedGraph instance (weighted, directed graph)
+	 * Returns:
+	 *  - A std::vector, each element being another std::vector (a component)
+	 *    of vertices that are connected (in no particular order).
+	 */ 
+	template<class T, class W, class Hash, class KeyEq>
+	std::vector<std::vector<typename DGraph::Vertex*>> 
+	simpleDFS(const DGraph& g, std::initializer_list<typename DGraph::Vertex*> args);
 
-/*
-	* Perform depth-first search, keeping only information about
-	* connected components.
-	* 
-	* Passing in vertices will suggest the order to run the search in.
-	* Invalid vertices (e.g. vertices that don't belong to the graph) are
-	* ignored/skipped, and remaining vertices are run in arbitrary order.
-	* 
-	* READ operation.
-	* Parameters:
-	*  - g : A DirectedGraph instance (weighted, directed graph)
-	* Returns:
-	*  - A std::vector, each element being another std::vector (a component)
-	*    of vertices that are connected (in no particular order). Note: each
-	*    component std::vector is allocated on the heap; it is the user's
-	*    responsibility to manage it.
-	*/ 
-template<class T, class W>
-std::vector<DComponent*> dfs_cc(const DGraph& g, std::initializer_list<DVertex*> args);
+	/*
+	 * Perform depth-first search, retaining information about 
+	 * post/pre-numbers. Starts on an arbitrary vertex.
+	 * 
+	 * Passing in vertices will suggest the order to run the search in.
+	 * Invalid vertices (e.g. vertices that don't belong to the graph) are
+	 * ignored/skipped, and remaining vertices are run in arbitrary order.
+	 * 
+	 * READ operation.
+	 * Parameters:
+	 *  - g : A DirectedGraph instance (weighted, directed graph)
+	 * Returns:
+	 *  - A std::vector with each element being another vector of tuples. Each
+	 *    tuple vector is a component, and each tuple contains the following:
+	 *      <0> Pre order number
+	 *      <1> Post order number
+	 *      <2> Vertex pointer.
+	 */ 
+	template<class T, class W, class Hash, class KeyEq>
+	std::vector<std::vector<std::tuple<std::size_t, std::size_t, typename DGraph::Vertex*>>>
+	fullDFS(const DGraph& g);
 
-/*
-	* Perform depth-first search, retaining information about 
-	* post/pre-numbers. Starts on an arbitrary vertex.
-	* 
-	* READ operation.
-	* Parameters:
-	*  - g : A DirectedGraph instance (weighted, directed graph)
-	* Returns:
-	*  - A std::vector, each element being a vector
-	*/ 
-template<class T, class W>
-std::vector<DFullComp*> dfs_full(const DGraph& g, std::initializer_list<DVertex*> args);
+	/*
+	 * Perform depth-first search, retaining information about 
+	 * post/pre-numbers. Starts on an arbitrary vertex.
+	 * 
+	 * Passing in vertices will suggest the order to run the search in.
+	 * Invalid vertices (e.g. vertices that don't belong to the graph) are
+	 * ignored/skipped, and remaining vertices are run in arbitrary order.
+	 * 
+	 * READ operation.
+	 * Parameters:
+	 *  - g : A DirectedGraph instance (weighted, directed graph)
+	 * Returns:
+	 *  - A std::vector, each element being a vector
+	 */ 
+	template<class T, class W, class Hash, class KeyEq>
+	std::vector<std::tuple<std::size_t, std::size_t, typename DGraph::Vertex*>> 
+	fullDFS(const DGraph& g, std::initializer_list<typename DGraph::Vertex*> args);
 
+	/*
+	 * Finds whether there is a cycle in the graph.
+	 *
+	 * READ operation.
+	 * Parameters:
+	 *  - g : A DirectedGraph instance (weighted, directed graph)
+	 * Returns:
+	 *  - true if and only if there exists a cycle in the graph
+	 */
+	template<class T, class W, class Hash, class KeyEq>
+	bool has_cycle(const DGraph& g);
 
-
-/*
-	* Finds whether there is a cycle in the graph.
-	*
-	* READ operation.
-	* Parameters:
-	*  - g : A DirectedGraph instance (weighted, directed graph)
-	* Returns:
-	*  - true if and only if there exists a cycle in the graph
-	*/
-template<class T, class W>
-bool has_cycle(const DGraph& g);
-
-/*
-	* Returns a topological sort of the graph.
-	*
-	* READ operation.
-	* Parameters:
-	*  - g : A DirectedGraph instance (weighted, directed graph)
-	* Returns:
-	*  - true if and only if there exists a cycle in the graph
-	*/
-template<class T, class W>
-std::vector<DDFSResult> top_sort(const DGraph& g);
+	/*
+	 * Constructs a topological sort of the graph.
+	 * 
+	 * READ operation.
+	 * Parameters:
+	 *  - g : A DirectedGraph instance (weighted, directed graph)
+	 * Returns:
+	 *  - a topological sort of the graph
+	 */
+	template<class T, class W, class Hash, class KeyEq>
+	std::vector<typename DGraph::Vertex*> top_sort(const DGraph& g);
 
 //-----------------------------------------------------------------------------
 // Undirected Graphs
 //-----------------------------------------------------------------------------
+	#define UGraph UndirectedGraph<T, W, Hash, KeyEq>
+	/*
+	 * Perform depth-first search, keeping only information about
+	 * connected components. Starts on an arbitrary vertex.
+	 * READ operation.
+	 * Parameters:
+	 *  - g : A UndirectedGraph instance (weighted, undirected graph)
+	 * Returns:
+	 *  - A std::vector, each element being another std::vector (a component)
+	 *    of vertices that are connected (in no particular order)
+	 */ 
+	template<class T, class W, class Hash, class KeyEq>
+	std::vector<std::vector<typename UGraph::Vertex*>> 
+	undirected_dfs_cc(const UGraph& g, std::initializer_list<typename UGraph::Vertex*> args);
 
-/*
-	* Perform depth-first search, keeping only information about
-	* connected components. Starts on an arbitrary vertex.
-	* READ operation.
-	* Parameters:
-	*  - g : A UndirectedGraph instance (weighted, undirected graph)
-	* Returns:
-	*  - A std::vector, each element being another std::vector (a component)
-	*    of vertices that are connected (in no particular order)
-	*/ 
-template<class T, class W>
-std::vector<UComponent*> dfs_cc(const UGraph& g, std::initializer_list<UVertex*> args);
-
-/*
-	* Perform depth-first search, retaining information about 
-	* post/pre-numbers. Starts on an arbitrary vertex.
-	* 
-	* READ operation.
-	* Parameters:
-	*  - g : An UndirectedGraph instance (weighted, directed graph)
-	* Returns:
-	*  - A std::vector, each element being a vector
-	*/ 
-template<class T, class W>
-std::vector<UFullComp*> dfs_full(const UGraph& g, std::initializer_list<UVertex*> args);
+	/*
+	 * Perform depth-first search, retaining information about 
+	 * post/pre-numbers. Starts on an arbitrary vertex.
+	 * 
+	 * READ operation.
+	 * Parameters:
+	 *  - g : An UndirectedGraph instance (weighted, directed graph)
+	 * Returns:
+	 *  - A std::vector, each element being a vector
+	 */ 
+	template<class T, class W, class Hash, class KeyEq>
+	std::vector<std::vector<typename UGraph::Vertex*>> 
+	dfs_full(const UGraph& g, std::initializer_list<typename UGraph::Vertex*> args);
 
 //-----------------------------------------------------------------------------
 
 // Directed Graphs
 
-//Helper function. Executes DFS with the element(s) contained in `work_stack`.
-template<class T, class W>
-static void dfs_explore(
-	std::stack<DVertex*>& work_stack,
-	DisjointSet& set,
-	std::unordered_map<DVertex*, size_t>& master_map
-) {
-	//DFS search loop
-	while(!work_stack.empty()) {
-		DVertex* vertex = work_stack.top();
-		work_stack.pop();
-		size_t ind = master_map[vertex];
-		//Iterate through neighbors
-		for(auto it = vertex->neighbors(); it != vertex->neighborsEnd(); ++it) {
-			//Look if neighbor was already visited
-			size_t it_ind = master_map[it->first];
-			//Try to add the neighbor vertex to the visit list, if it isn't
-			//already visited. If it hasn't been visited, add it to the
-			//stack so we can expand it later.
-			//A node is unvisited if we can merge with the current set and
-			//is a singleton component.
-			if(set[set.find(it_ind)]._rank == 0 && set.merge(it_ind, ind)) {
-				//Neighbor not already visited.
-				work_stack.push(it->first);
+	/* 
+	 * Helper function. Executes DFS with the element contained in `work_stack`.
+	 * Calling this function with more than one element in the provided stack
+	 * will cause undefined behavior.
+	 */
+	template<class T, class W, class Hash, class KeyEq>
+	static void dSimpleExplore(
+		std::stack<typename DGraph::Vertex*>& work_stack,
+		DisjointSet& set,
+		std::unordered_map<typename DGraph::Vertex*, std::size_t>& master_map
+	) {
+		using Vertex = DGraph::Vertex;
+		//DFS search loop
+		while(!work_stack.empty()) {
+			Vertex* vertex = work_stack.top();
+			work_stack.pop();
+			std::size_t ind = master_map[vertex];
+			//Iterate through neighbors
+			for(auto it : **vertex) {
+				//Look if neighbor was already visited
+				size_t it_ind = master_map[it->first];
+				//Try to add the neighbor vertex to the visit list, if it isn't
+				//already visited. If it hasn't been visited, add it to the
+				//stack so we can expand it later.
+				//A node is unvisited if we can merge with the current set and
+				//is a singleton component.
+				if(set[set.find(it_ind)].rank() == 0 && set.merge(it_ind, ind)) {
+					//Neighbor not already visited.
+					work_stack.push(it->first);
+				}
 			}
 		}
 	}
-}
 
-template<class T, class W>
-std::vector<DComponent*> dfs_cc(
-	const DGraph& g, 
-	std::initializer_list<DVertex*> args
-) {
-	std::vector<DComponent*> result;
-	if(g.vertexCount() == 0) {
+	template<class T, class W, class Hash, class KeyEq>
+	std::vector<std::vector<typename DGraph::Vertex*>> 
+	simpleDFS(const DGraph& g) {
+		return simpleDFS(g, {});
+	}
+
+	template<class T, class W, class Hash, class KeyEq>
+	std::vector<std::vector<typename DGraph::Vertex*>> 
+	simpleDFS(const DGraph& g, std::initializer_list<typename DGraph::Vertex*>& args) {
+		using Vertex = typename DGraph::Vertex;
+		std::vector<std::vector<Vertex*>> result;
+		if(g.vertexCount() == 0) {
+			return result;
+		}
+		result.reserve(g.vertexCount());
+		DisjointSet work_set(g.vertexCount());
+		std::stack<Vertex*> work_stack;
+		std::unordered_map<Vertex*, std::size_t> master_map;
+		master_map.reserve(g.vertexCount());
+		std::size_t i = 0;
+		for(auto& const it : g) {
+			master_map[it->second] = i;
+			++i;
+		}
+		if(args.size() > 0) {
+			//Handling arguments
+			for(Vertex* v : args) {
+				std::size_t v_ind = master_map[v];
+				if(work_set.find(v_ind) == v_ind && work_set[v_ind].rank() == 0u) {
+					work_stack.push(v);
+					dSimpleExplore(work_stack, work_set, master_map);
+				}
+			}
+		}
+		for(auto it : g) {
+			//Main loop
+			Vertex* vert = it->second; //top-level vertex
+			std::size_t v_ind = master_map[vert];
+			if(work_set.find(v_ind) == v_ind && work_set[v_ind].rank() == 0u) {
+				//Start a new DFS tree
+				work_stack.push(vert);
+				dSimpleExplore(work_stack, work_set, master_map);
+			}
+		}
+		//Construct the result from the disjoint set
+		std::unordered_map<size_t, size_t> component_map;
+		component_map.reserve(g.vertexCount());
+		result.reserve(g.vertexCount());
+		size_t ctr = 0;
+		for(auto pair : master_map) {
+			size_t ind = work_set.find(pair.second);
+			if(component_map.find(ind) == component_map.end()) {
+				component_map[ind] = ctr++;
+				result.push_back(new DComponent());
+			}
+			result[component_map[ind]]->insert(pair.first);
+		}
+		result.shrink_to_fit();
 		return result;
 	}
-	result.reserve(g.vertexCount() / _FN_RESERVE_FACTOR);
-	DisjointSet work_set(g.vertexCount());
-	std::stack<DVertex*> work_stack;
-	std::unordered_map<DVertex*, size_t> master_map;
-	master_map.reserve(g.vertexCount());
-	size_t i = 0;
-	for(auto it = g.begin(); it != g.end(); ++it) {
-		master_map[it->second] = i;
-		++i;
-	}
-	if(args.size() > 0) {
-		//Handling arguments
-		for(DVertex* v : args) {
-			work_stack.push(v);
-		}
-		dfs_explore(work_stack, work_set, master_map);
-	}
-	for(auto it = g.begin(); it != g.end(); ++it) {
-		//Main loop
-		DVertex* vert = it->second; //top-level vertex
-		size_t v_ind = master_map[vert];
-		if(work_set.find(v_ind) == v_ind && work_set[v_ind]._rank == 0u) {
-			//Start a new DFS tree
-			work_stack.push(vert);
-			dfs_explore(work_stack, work_set, master_map);
-		}
-	}
-	std::unordered_map<size_t, size_t> component_map;
-	component_map.reserve(g.vertexCount());
-	result.reserve(g.vertexCount());
-	
-	size_t ctr = 0;
-	//Construct results
-	for(auto pair : master_map) {
-		size_t ind = work_set.find(pair.second);
-		if(component_map.find(ind) == component_map.end()) {
-			component_map[ind] = ctr++;
-			result.push_back(new DComponent());
-		}
-		result[component_map[ind]]->insert(pair.first);
-	}
-	result.shrink_to_fit();
-	return result;
-}
 
-template<class T, class W>
-std::vector<DComponent*> dfs_cc(const DGraph& g) {
-	return dfs_cc(g, {});
-}
 
-template<class T, class W>
-static void dfs_explore_full(
-	std::stack<DDFSResult>& work_stack,
-	DisjointSet& set,
-	std::unordered_map<DVertex*, size_t>& master_map,
-	std::unordered_set<DVertex*> visited,
-	size_t& order
-) {
-	while(!work_stack.empty()) {
-		//DFS search loop
-		DDFSResult info = work_stack.top(); //copy?
-		DVertex* v = info._vertex;
-		// info._pre = order++; //Adjust preorder
-		//Expand node
-		bool bt = true; //pessimistic backtrack flag
+	template<class T, class W, class Hash, class KeyEq>
+	static void dFullExplore(
+		std::stack<typename DGraph::Vertex*>& work_stack,
+		DisjointSet& set,
+		std::unordered_map<typename DGraph::Vertex*, size_t>& master_map,
+		size_t& order
+	) {
+		using Vertex = typename DGraph::Vertex;
+		while(!work_stack.empty()) {
+			//DFS search loop
+			Vertex info = work_stack.top(); //copy?
+			Vertex* v = info._vertex;
+			// info._pre = order++; //Adjust preorder
+			//Expand node
+			bool bt = true; //pessimistic backtrack flag
 
-		for(auto it = v->neighbors(); it != v->neighborsEnd(); ++it) {
-			if(set.merge(master_map[v], master_map[it->first])) {
-				//Neighbor not already visited, add to stack
-				work_stack.emplace(0, 0, it->first);
-				bt = false;
+			for(auto it = v->neighbors(); it != v->neighborsEnd(); ++it) {
+				if(set.merge(master_map[v], master_map[it->first])) {
+					//Neighbor not already visited, add to stack
+					work_stack.emplace(0, 0, it->first);
+					bt = false;
+				}
+			}
+			if(bt) {
+				//There were no options, backtrack
+				info._post = order++;
+				work_stack.pop();
+			} else {
+				info._pre = order++;
 			}
 		}
-		if(bt) {
-			//There were no options, backtrack
-			info._post = order++;
-			work_stack.pop();
-		} else {
-			info._pre = order++;
-		}
+
 	}
-
-}
-
+/*
 template<class T, class W>
-std::vector<DFullComp*> dfs_full(const DGraph& g, std::initializer_list<DVertex*> args) {
+std::vector<DFullComp*> fullDFS(const DGraph& g, std::initializer_list<DVertex*> args) {
 	std::vector<DFullComp*> result;
 	if(g.vertexCount() == 0) {
 		return result;
@@ -618,17 +547,8 @@ std::vector<DDFSResult> top_sort(const DGraph& g) {
 		}
 		return result;
 	}
-	#undef DGraph 
-	#undef DVertex 
-	#undef DComponent 
-	#undef DFullComp 
-	#undef DDFSResult
-
-	#undef UGraph 
-	#undef UVertex 
-	#undef UComponent 
-	#undef UFullComp 
-	#undef UDFSResult
 }
-
+*/
+#undef UGraph
+#undef DGraph
 #endif

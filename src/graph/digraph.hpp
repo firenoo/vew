@@ -41,7 +41,29 @@ namespace firenoo {
 		* Default constructor. Creates an empty graph with no vertices or edges.
 		*/
 		DirectedGraph() : Graph() {}
-		
+
+		//Copy		
+		DirectedGraph(DirectedGraph& other) : Graph(other) {
+			for(auto &[vertex, set] : other.m_backedges) {
+				auto v1 = this->m_vertices[**vertex];
+				m_backedges[v1] = {};
+				for(auto& it : set) {
+					auto v2 = this->m_vertices[***it];
+					m_backedges[v1].insert(v2);
+				}
+			}
+		}
+
+		//Move
+		DirectedGraph(DirectedGraph&& other) : Graph(std::move(other)) {
+			for(auto &[vertex, b_edges] : other.m_backedges) {
+				m_backedges[vertex] = {};
+				for(auto it = b_edges.begin(); it != b_edges.end();/**/) {
+					m_backedges[vertex].insert(std::move(b_edges.extract(it++)));
+				}
+			}
+		}
+
 		~DirectedGraph() {
 			this->clear();
 			m_backedges.clear();
@@ -77,7 +99,7 @@ namespace firenoo {
 					Vertex* nextVertex = work_stack.top();
 					work_stack.pop();
 					for(auto& edge : *nextVertex) {
-						auto t = **(edge.target());
+						auto& t = **(edge.target());
 						if(visited.find(edge.target()) == visited.end()) {
 							visited.insert(edge.target());
 							work_stack.push(edge.target());
@@ -95,7 +117,7 @@ namespace firenoo {
 			auto vertex1 = this->getVertex(v1);
 			auto vertex2 = this->getVertex(v2);
 			if(vertex1 && vertex2) {
-				auto it = m_backedges.at(*vertex2);
+				auto& it = m_backedges.at(*vertex2);
 				return it.find(*vertex1) != it.end();
 			}
 			return false;
@@ -132,17 +154,18 @@ namespace firenoo {
 				//Delete edges from this vertex
 				for(auto& neighbor : **vertex) {
 					m_backedges[neighbor.target()].erase(*vertex);
+					--this->m_edgeCount;
 				}
 				//Delete edges to this vertex
-				auto& b_edges = m_backedges[*vertex];
-				//Iterate through backedges. typeof(b_edge) = Vertex* iterator
-				for(auto b_edge = b_edges.begin(); b_edge != b_edges.end(); ++b_edge) {
-					//Find the edge in the edge list. typeof(it) = Edge iterator
-					for(auto it = (*b_edge)->begin(); it != (*b_edge)->end(); ++it) {
+				//Iterate through backedges. typeof(b_edge) = Vertex*
+				for(auto& b_edge : m_backedges[*vertex]) {
+					//Find the edge in the edge list. typeof(it) = Edge
+					for(auto it = b_edge->begin(); it != b_edge->end(); ++it) {
 						if(it->target() == *vertex) {
-							this->m_edges[*b_edge].erase(it); //delete when found
+							this->m_edges[b_edge].erase(it); //delete when found
+							--this->m_edgeCount;
+							break;
 						}
-						break;
 					}
 				}
 				//clean up
