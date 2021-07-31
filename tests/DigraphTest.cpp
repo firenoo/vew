@@ -14,12 +14,15 @@ namespace test {
 	void testSuite1();
 	void digraph1();
 	void digraph2();
+	void copyTest();
+	void moveTest();
 
 	void testSuite2();
 	void path();
 	void chain();
 
 	void digraph1() {
+		std::printf("Test 1\n");
 		DirectedGraph<int> g;
 		for(int i = 0; i < 8; ++i) {
 			g.addVertex(i);
@@ -174,9 +177,11 @@ namespace test {
 		g.clear();
 		assert(g.edgeCount() == 0);
 		assert(g.vertexCount() == 0);
+		std::printf("-------------------------\n");
 	}
 
 	void digraph2() {
+		std::printf("Test 2\n");
 		DirectedGraph<int> g;
 		//Remove vertex: simple
 		g.addVertex(0);
@@ -215,21 +220,80 @@ namespace test {
 		assert(!g.getEdge(A, B));
 		assert(!g.hasEdge(B, A));
 		assert(!g.getEdge(B, A));
+		std::printf("-------------------------\n");
+	}
+
+	void copyTest() {
+		std::printf("Copy test\n");
+		DirectedGraph<int> g;
+		for(int i = 0; i < 10; ++i) {
+			g.addVertex(i);
+		}
+		DirectedGraph<int> copy = g;
+		for(int i = 0; i < 10; ++i) {
+			assert(copy.hasVertex(i));
+		}
+		g.addVertex(10);
+		assert(!copy.hasVertex(10));
+		g.addEdge(0, 1, 1.0);
+		assert(!copy.hasEdge(0, 1));
+
+		copy.addVertex(100);
+		assert(!g.hasVertex(100));
+		copy.addEdge(2, 3, 1.0);
+		assert(!g.hasEdge(2, 3));
+		std::printf("---------------------------------\n");
+	}
+
+	void moveTest() {
+		std::printf("Move test\n");
+		DirectedGraph<int> g;
+		for(int i = 0; i < 10; ++i) {
+			g.addVertex(i);
+		}
+		DirectedGraph<int> move = g;
+		for(int i = 0; i < 10; ++i) {
+			assert(g.hasVertex(i));
+		}
+		std::printf("---------------------------------\n");
 	}
 
 	void testSuite1() {
+		std::printf("Directed Graph Tests\n----------------------------\n");
 		digraph1();
 		digraph2();
+		copyTest();
+		moveTest();
 	}
 
 	void testSuite2() {
+		std::printf("Preset Tests\n-----------------------\n");
 		path();
 		chain();
 	}
 
 	void path() {
-		// DirectedGraph<int> g = directed::makePath(5, 1.0);
-
+		std::printf("Path test\n");
+		const std::size_t LENGTH = 5;
+		const double WEIGHT = 1.0;
+		DirectedGraph<int> g = directed::makePath(LENGTH, WEIGHT);
+		for(auto &v : g) {
+			std::printf("%d ", v.first);
+		}
+		std::printf("\n");
+		for(auto &[vertex, edge] : g.edges()) {
+			std::printf("(%d, %d) ", **vertex, **(edge.target()));
+		}
+		std::printf("\n");
+		std::cout.flush();
+		for(std::size_t i = 0; i < LENGTH; ++i) {
+			assert(g.hasVertex((int)i));
+		}
+		for(std::size_t i = 0; i < LENGTH - 1; ++i) {
+			assert(g.hasEdge(i, i+1));
+			assert(g.getEdge(i, i+1));
+			assert(g.getEdge(i, i+1).value() == WEIGHT);
+		}
 	}
 
 	void chain() {
@@ -241,4 +305,5 @@ namespace test {
 }
 int main() {
 	firenoo::test::testSuite1();
+	// firenoo::test::testSuite2();
 }

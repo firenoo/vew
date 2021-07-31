@@ -212,24 +212,22 @@ namespace firenoo {
 		 * G = (V, E), with 
 		 * V = {0, 1}, 
 		 * E = {(0, 1)}.
+		 * 
+		 * Each edge has a weight of `w`.
 		 */
-		DirectedGraph<int> makePath(std::size_t length);
+		DirectedGraph<int> makePath(std::size_t length, double w);
 
-		DirectedGraph<int> makeCycle(std::size_t length);
+		/*
+		 * Creates a directed graph with a cycle. 
+		 *
+		 */
+		DirectedGraph<int> makeCycle(std::size_t length, double w);
 
-		DirectedGraph<int> makeComplete(std::size_t size);
+		DirectedGraph<int> makeComplete(std::size_t size, double w);
+
+		DirectedGraph<int> makeChain(std::size_t length, double w);
 
 
-		DirectedGraph<int> makePath(std::size_t length, double w) {
-			DirectedGraph<int> result;
-			for(std::size_t i = 0; i < length; ++i) {
-				result.addVertex(i);
-			}
-			for(std::size_t i = 0; i < length - 1; ++i) {
-				result.addEdge(i, i + 1, w);
-			}
-			return result;
-		}
 	}
 #endif
 }

@@ -131,7 +131,7 @@ namespace firenoo {
 	 *  - true if and only if there exists a cycle in the graph
 	 */
 	template<class T, class W, class Hash, class KeyEq>
-	bool has_cycle(const DGraph& g);
+	bool hasCycle(const DGraph& g);
 
 	/*
 	 * Constructs a topological sort of the graph.
@@ -143,7 +143,7 @@ namespace firenoo {
 	 *  - a topological sort of the graph
 	 */
 	template<class T, class W, class Hash, class KeyEq>
-	std::vector<typename DGraph::Vertex*> top_sort(const DGraph& g);
+	std::vector<typename DGraph::Vertex*> topSort(const DGraph& g);
 
 //-----------------------------------------------------------------------------
 // Undirected Graphs
@@ -159,9 +159,9 @@ namespace firenoo {
 	 *  - A std::vector, each element being another std::vector (a component)
 	 *    of vertices that are connected (in no particular order)
 	 */ 
-	template<class T, class W, class Hash, class KeyEq>
-	std::vector<std::vector<typename UGraph::Vertex*>> 
-	undirected_dfs_cc(const UGraph& g, std::initializer_list<typename UGraph::Vertex*> args);
+	// template<class T, class W, class Hash, class KeyEq>
+	// std::vector<std::vector<typename UGraph::Vertex*>> 
+	// simpleDFS(const UGraph& g, std::initializer_list<typename UGraph::Vertex*> args);
 
 	/*
 	 * Perform depth-first search, retaining information about 
@@ -173,9 +173,9 @@ namespace firenoo {
 	 * Returns:
 	 *  - A std::vector, each element being a vector
 	 */ 
-	template<class T, class W, class Hash, class KeyEq>
-	std::vector<std::vector<typename UGraph::Vertex*>> 
-	dfs_full(const UGraph& g, std::initializer_list<typename UGraph::Vertex*> args);
+	// template<class T, class W, class Hash, class KeyEq>
+	// std::vector<std::vector<typename UGraph::Vertex*>> 
+	// fullDFS(const UGraph& g, std::initializer_list<typename UGraph::Vertex*> args);
 
 //-----------------------------------------------------------------------------
 
@@ -229,6 +229,7 @@ namespace firenoo {
 		if(g.vertexCount() == 0) {
 			return result;
 		}
+		//Initialization
 		result.reserve(g.vertexCount());
 		DisjointSet work_set(g.vertexCount());
 		std::stack<Vertex*> work_stack;
@@ -236,11 +237,11 @@ namespace firenoo {
 		master_map.reserve(g.vertexCount());
 		std::size_t i = 0;
 		for(auto& const it : g) {
-			master_map[it->second] = i;
+			master_map[it->second] = i; //fill out map
 			++i;
 		}
+		//Handle arguments
 		if(args.size() > 0) {
-			//Handling arguments
 			for(Vertex* v : args) {
 				std::size_t v_ind = master_map[v];
 				if(work_set.find(v_ind) == v_ind && work_set[v_ind].rank() == 0u) {
@@ -249,8 +250,8 @@ namespace firenoo {
 				}
 			}
 		}
-		for(auto it : g) {
-			//Main loop
+		//Handle the rest
+		for(auto& it : g) {
 			Vertex* vert = it->second; //top-level vertex
 			std::size_t v_ind = master_map[vert];
 			if(work_set.find(v_ind) == v_ind && work_set[v_ind].rank() == 0u) {
@@ -275,7 +276,7 @@ namespace firenoo {
 		result.shrink_to_fit();
 		return result;
 	}
-
+/*
 
 	template<class T, class W, class Hash, class KeyEq>
 	static void dFullExplore(
@@ -310,7 +311,6 @@ namespace firenoo {
 		}
 
 	}
-/*
 template<class T, class W>
 std::vector<DFullComp*> fullDFS(const DGraph& g, std::initializer_list<DVertex*> args) {
 	std::vector<DFullComp*> result;
@@ -547,8 +547,8 @@ std::vector<DDFSResult> top_sort(const DGraph& g) {
 		}
 		return result;
 	}
-}
 */
+}
 #undef UGraph
 #undef DGraph
 #endif

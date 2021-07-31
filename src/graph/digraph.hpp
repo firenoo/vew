@@ -45,10 +45,10 @@ namespace firenoo {
 		//Copy		
 		DirectedGraph(DirectedGraph& other) : Graph(other) {
 			for(auto &[vertex, set] : other.m_backedges) {
-				auto v1 = this->m_vertices[**vertex];
+				auto v1 = this->m_vertices[**vertex].get();
 				m_backedges[v1] = {};
 				for(auto& it : set) {
-					auto v2 = this->m_vertices[***it];
+					auto v2 = this->m_vertices[**it].get();
 					m_backedges[v1].insert(v2);
 				}
 			}
