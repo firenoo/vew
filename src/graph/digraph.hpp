@@ -263,6 +263,31 @@ namespace firenoo {
 			return addBiEdge(v1, v2, w);
 		}
 
+		DirectedGraph& operator=(DirectedGraph& other) {
+			Graph::operator=(other);
+			for(auto &[vertex, set] : other.m_backedges) {
+				auto v1 = this->m_vertices[**vertex].get();
+				m_backedges[v1] = {};
+				for(auto& it : set) {
+					auto v2 = this->m_vertices[**it].get();
+					m_backedges[v1].insert(v2);
+				}
+			}
+		}
+
+		DirectedGraph& operator=(DirectedGraph&& other) {
+			Graph::operator=(std::move(other));
+			for(auto &[vertex, set] : other.m_backedges) {
+				auto v1 = this->m_vertices[**vertex].get();
+				m_backedges[v1] = {};
+				for(auto& it : set) {
+					auto v2 = this->m_vertices[**it].get();
+					m_backedges[v1].insert(v2);
+				}
+			}
+			return *this;
+		}
+
 		#undef Graph
 	};
 }

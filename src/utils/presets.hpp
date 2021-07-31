@@ -201,6 +201,7 @@ namespace firenoo {
 		}
 	}
 #endif
+#define _FN_ENABLE_DIRECTED_PRESETS
 #ifdef _FN_ENABLE_DIRECTED_PRESETS
 	namespace directed {
 
@@ -208,25 +209,116 @@ namespace firenoo {
 		 * Creates a directed graph with a path with the specified length.
 		 * Nodes are labelled 0 to `length - 1`. 
 		 * Edges are directed from lower value indices to higher value indices.
-		 * For example, calling `makePath(2)` will create a directed graph 
+		 * For example, calling `makePath(2, w)` will create a directed graph 
 		 * G = (V, E), with 
 		 * V = {0, 1}, 
 		 * E = {(0, 1)}.
 		 * 
 		 * Each edge has a weight of `w`.
+		 * Will fail if length == 0.
 		 */
 		DirectedGraph<int> makePath(std::size_t length, double w);
 
+
 		/*
-		 * Creates a directed graph with a cycle. 
-		 *
+		 * Creates a bi-directional line graph with the specified length.
+		 * Nodes are labelled 0 to `length - 1`.
+		 * The resultant graph is analogous to `undirected::makeLine`, using
+		 * `DirectedGraph` instead of `UndirectedGraph`.
+		 * For example, calling `make2WayPath(3, w) will create a directed graph
+		 * G = (V, E) with
+		 * V = {0, 1, 2}
+		 * E = {(0, 1), (1, 0), (1, 2), (2, 1)}.
+		 * 
+		 * Each edge has a weight of `w`.
+		 * Will fail if `length == 0`.
+		 */
+		DirectedGraph<int> make2WayPath(std::size_t length, double w);
+
+		/*
+		 * Creates a directed cyclic graph of the specified length.
+		 * Nodes are labelled 0 to `length - 1`.
+		 * For example, calling `makeCycle(3, w)` will create a directed graph
+		 * G = (V, E) with
+		 * V = {0, 1, 2}
+		 * E = {(0, 1), (1, 2), (2, 0)}.
+		 * 
+		 * Each edge has a weight of `w`.
+		 * Will fail if `length == 0`.
 		 */
 		DirectedGraph<int> makeCycle(std::size_t length, double w);
 
+		/*
+		 * Creates a cyclic graph of the specified length.
+		 * Analogous to `undirected::makeCycle`.
+		 * For example, calling `make2WayCycle(3, w)` will create a directed 
+		 * graph
+		 * G = (V, E) with
+		 * V = {0, 1, 2}
+		 * E = {(0, 1), (1, 0), (1, 2), (2, 1), (2, 0), (0, 2)}.
+		 * 
+		 * Each edge has a weight of `w`.
+		 * Will fail if `length == 0`.
+		 */
+		DirectedGraph<int> make2WayCycle(std::size_t length, double w);
+
+		/*
+		 * Creates a complete directed graph with `size` nodes.
+		 * Analogous to `undirected::makeComplete` for DirectedGraph.
+		 * 
+		 * Each edge has a weight `w`.
+		 * Will fail if `size == 0`.
+		 */
 		DirectedGraph<int> makeComplete(std::size_t size, double w);
 
+		/*
+		 * Creates a one-directional chain graph with `length` links.
+		 * Intuitively, a chain graph is a graph that looks like a
+		 * linear chain link.
+		 * Here, a link consists of 3 vertices and 4 edges, with 1
+		 * vertex being the "head" and 2 vertices the "tail". Edges
+		 * exist from head to tail within a link, as well as from tail
+		 * to the head of the next link. At the end is a single link with
+		 * only a head vertex; this is not counted as part of the `length`
+		 * links. For a more precise description, see the formal definition
+		 * below.
+		 * 
+		 * Formal definition:
+		 * G = (V, E) with
+		 * V = {0, 1, 2, ..., 3 * length + 1}
+		 * E = {(3i, 3i + 1)     | 0 <= i < length} U 
+		 *     {(3i, 3i + 2)     | 0 <= i < length} U
+		 *     {(3i + 1, 3(i+1)) | 0 <= i < length} U
+		 * 	   {(3i + 2, 3(i+1)) | 0 <= i < length}
+		 */
 		DirectedGraph<int> makeChain(std::size_t length, double w);
 
+		/*
+		 * Creates a two-directional chain graph with `length` links.
+		 * Intuitively, a chain graph is a graph that looks like a
+		 * linear chain link.
+		 * Analogous to `undirected::makeChain`.= for DirectedGraph
+		 * Here, a link consists of 3 vertices and 8 edges, with 1
+		 * vertex being the "head" and 2 vertices the "tail". Edges
+		 * exist from head to tail within a link, as well as from tail
+		 * to the head of the next link. At the end is a single link with
+		 * only a head vertex; this is not counted as part of the `length`
+		 * links. For a more precise description, see the formal definition
+		 * below.
+		 * 
+		 * Formal definition:
+		 * G = (V, E) with
+		 * V = {0, 1, 2, ..., 3 * length + 1}
+		 * E = {(3i, 3i + 1)     | 0 <= i < length} U
+		 *     {(3i + 1, 3i)     | 0 <= i < length} U
+		 *     {(3i, 3i + 2)     | 0 <= i < length} U
+		 *     {(3i + 2, 3i)     | 0 <= i < length} U
+		 *     {(3i + 1, 3(i+1)) | 0 <= i < length} U
+		 *     {(3(i+1), 3i + 1) | 0 <= i < length} U
+		 * 	   {(3i + 2, 3(i+1)) | 0 <= i < length} U
+		 * 	   {(3(i+1), 3i + 2) | 0 <= i < length}
+		 */
+		DirectedGraph<int> make2WayChain(std::size_t length, double w);
 
 	}
 #endif

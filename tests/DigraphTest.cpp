@@ -20,6 +20,12 @@ namespace test {
 	void testSuite2();
 	void path();
 	void chain();
+	void cycle();
+	void complete();
+
+	void testSuite3();
+	void simpleDFSTest();
+	void fullDFSTest();
 
 	void digraph1() {
 		std::printf("Test 1\n");
@@ -177,7 +183,7 @@ namespace test {
 		g.clear();
 		assert(g.edgeCount() == 0);
 		assert(g.vertexCount() == 0);
-		std::printf("-------------------------\n");
+		std::printf("Success\n---------------------------------\n");
 	}
 
 	void digraph2() {
@@ -220,7 +226,7 @@ namespace test {
 		assert(!g.getEdge(A, B));
 		assert(!g.hasEdge(B, A));
 		assert(!g.getEdge(B, A));
-		std::printf("-------------------------\n");
+		std::printf("Success\n---------------------------------\n");
 	}
 
 	void copyTest() {
@@ -242,7 +248,7 @@ namespace test {
 		assert(!g.hasVertex(100));
 		copy.addEdge(2, 3, 1.0);
 		assert(!g.hasEdge(2, 3));
-		std::printf("---------------------------------\n");
+		std::printf("Success\n---------------------------------\n");
 	}
 
 	void moveTest() {
@@ -251,11 +257,11 @@ namespace test {
 		for(int i = 0; i < 10; ++i) {
 			g.addVertex(i);
 		}
-		DirectedGraph<int> move = g;
+		DirectedGraph<int> move = std::move(g);
 		for(int i = 0; i < 10; ++i) {
-			assert(g.hasVertex(i));
+			assert(move.hasVertex(i));
 		}
-		std::printf("---------------------------------\n");
+		std::printf("Success.\n---------------------------------\n");
 	}
 
 	void testSuite1() {
@@ -264,12 +270,16 @@ namespace test {
 		digraph2();
 		copyTest();
 		moveTest();
+		std::printf("Directed Graph Tests Succeeded.\n");
 	}
 
 	void testSuite2() {
 		std::printf("Preset Tests\n-----------------------\n");
 		path();
 		chain();
+		cycle();
+		complete();
+		std::printf("Presets Tests Succeeded.\n");
 	}
 
 	void path() {
@@ -277,11 +287,11 @@ namespace test {
 		const std::size_t LENGTH = 5;
 		const double WEIGHT = 1.0;
 		DirectedGraph<int> g = directed::makePath(LENGTH, WEIGHT);
-		for(auto &v : g) {
+		for(auto& v : g) {
 			std::printf("%d ", v.first);
 		}
 		std::printf("\n");
-		for(auto &[vertex, edge] : g.edges()) {
+		for(auto& [vertex, edge] : g.edges()) {
 			std::printf("(%d, %d) ", **vertex, **(edge.target()));
 		}
 		std::printf("\n");
@@ -294,10 +304,142 @@ namespace test {
 			assert(g.getEdge(i, i+1));
 			assert(g.getEdge(i, i+1).value() == WEIGHT);
 		}
+		std::printf("Success\n---------------------------------\n");
+		std::printf("2WayPath test\n");
+		DirectedGraph<int> g2 = directed::make2WayPath(LENGTH, WEIGHT);
+		for(auto& v : g2) {
+			std::printf("%d ", v.first);
+		}
+		std::printf("\n");
+		for(auto& [vertex, edge] : g2.edges()) {
+			std::printf("(%d, %d) ", **vertex, **(edge.target()));
+		}
+		std::printf("\n");
+		std::cout.flush();
+		for(std::size_t i = 0; i < LENGTH; ++i) {
+			assert(g2.hasVertex((int)i));
+		}
+		for(std::size_t i = 0; i < LENGTH - 1; ++i) {
+			assert(g2.hasEdge(i, i+1));
+			assert(g2.hasEdge(i+1, i));
+		}
+		std::printf("Success\n---------------------------------\n");
 	}
 
 	void chain() {
+		std::printf("Chain Test\n");
+		const std::size_t LENGTH = 5;
+		const double WEIGHT = 1.0;
+		DirectedGraph<int> g = directed::makeChain(LENGTH, WEIGHT);
+		for(auto& v : g) {
+			std::printf("%d ", v.first);
+		}
+		std::printf("\n");
+		for(auto& [vertex, edge] : g.edges()) {
+			std::printf("(%d, %d) ", **vertex, **(edge.target()));
+		}
+		std::printf("\n");
+		std::cout.flush();
+		for(std::size_t i = 0; i < LENGTH * 3 + 1; ++i) {
+			assert(g.hasVertex((int) i));
+		}
+		for(std::size_t i = 0; i < LENGTH - 1; ++i) {
+			assert(g.hasEdge(i * 3, i * 3 + 1));
+			assert(g.hasEdge(i * 3, i * 3 + 2));
+			assert(g.hasEdge(i * 3 + 1, (i+1) * 3));
+			assert(g.hasEdge(i * 3 + 2, (i+1) * 3));
+		} 
+		std::printf("Success\n---------------------------------\n");
+		std::printf("2WayChain Test\n");
+		DirectedGraph<int> g2 = directed::make2WayChain(LENGTH, WEIGHT);
+		for(auto& v : g2) {
+			std::printf("%d ", v.first);
+		}
+		std::printf("\n");
+		for(auto& [vertex, edge] : g2.edges()) {
+			std::printf("(%d, %d) ", **vertex, **(edge.target()));
+		}
+		std::printf("\n");
+		std::cout.flush();
+		for(std::size_t i = 0; i < LENGTH * 3 + 1; ++i) {
+			assert(g2.hasVertex((int) i));
+		}
+		for(std::size_t i = 0; i < LENGTH - 1; ++i) {
+			assert(g2.hasEdge(i * 3, i * 3 + 1));
+			assert(g2.hasEdge(i * 3, i * 3 + 2));
+			assert(g2.hasEdge(i * 3 + 1, (i+1) * 3));
+			assert(g2.hasEdge(i * 3 + 2, (i+1) * 3));
+			assert(g2.hasEdge(i * 3 + 1, i * 3));
+			assert(g2.hasEdge(i * 3 + 2, i * 3));
+			assert(g2.hasEdge((i+1) * 3, i * 3 + 1));
+			assert(g2.hasEdge((i+1) * 3, i * 3 + 2));
+		} 
+		std::printf("Success\n---------------------------------\n");
+	}
 
+	void cycle() {
+		std::printf("Cycle Graph Test\n");
+		const std::size_t LENGTH = 5;
+		const double WEIGHT = 1.0;
+		DirectedGraph<int> g = directed::makeCycle(LENGTH, WEIGHT);
+		for(auto& v : g) {
+			std::printf("%d ", v.first);
+		}
+		std::printf("\n");
+		for(auto& [vertex, edge] : g.edges()) {
+			std::printf("(%d, %d) ", **vertex, **(edge.target()));
+		}
+		std::printf("\n");
+		std::cout.flush();
+		for(std::size_t i = 0; i < LENGTH - 1; ++i) {
+			assert(g.hasEdge(i, i+1));
+		}
+		assert(g.hasEdge(LENGTH-1, 0));
+		std::printf("Success\n---------------------------------\n");
+		std::printf("2WayCycle Graph Test\n");
+		DirectedGraph<int> g2 = directed::make2WayCycle(LENGTH, WEIGHT);
+		for(auto& v : g2) {
+			std::printf("%d ", v.first);
+		}
+		std::printf("\n");
+		for(auto& [vertex, edge] : g2.edges()) {
+			std::printf("(%d, %d) ", **vertex, **(edge.target()));
+		}
+		std::printf("\n");
+		std::cout.flush();
+		for(std::size_t i = 0; i < LENGTH - 1; ++i) {
+			assert(g2.hasEdge(i, i+1));
+			assert(g2.hasEdge(i+1, i));
+		}
+		assert(g2.hasEdge(LENGTH-1, 0));
+		assert(g2.hasEdge(0, LENGTH-1));
+		std::printf("Success\n---------------------------------\n");
+	}
+
+	void complete() {
+		std::printf("Complete Graph Test\n");
+		const std::size_t SIZE = 5;
+		const double WEIGHT = 1.0;
+		DirectedGraph<int> g = directed::makeComplete(SIZE, WEIGHT);
+		for(auto& v : g) {
+			std::printf("%d ", v.first);
+		}
+		std::printf("\n");
+		for(auto& [vertex, edge] : g.edges()) {
+			std::printf("(%d, %d) ", **vertex, **(edge.target()));
+		}
+		std::printf("\n");
+		std::cout.flush();
+		assert(g.edgeCount() == (SIZE * (SIZE- 1)));
+		for(std::size_t i = 0; i < SIZE; ++i) {
+			assert(g.hasVertex((int) i));
+		}
+		for(std::size_t i = 0; i < SIZE - 1; ++i) {
+			for(std::size_t j = i + 1; j < SIZE; ++j) {
+				assert(g.hasEdge(i, j));
+			}
+		}
+		std::printf("Success\n---------------------------------\n");
 	}
 
 }
@@ -305,5 +447,5 @@ namespace test {
 }
 int main() {
 	firenoo::test::testSuite1();
-	// firenoo::test::testSuite2();
+	firenoo::test::testSuite2();
 }

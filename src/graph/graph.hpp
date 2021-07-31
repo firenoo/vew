@@ -547,18 +547,21 @@ namespace firenoo {
 			return m_vertices.cend();
 		}
 
+	protected:
 		Graph& operator=(Graph& other) {
 			m_edgeCount = other.m_edgeCount;
 			for(auto &[t, vertex] : other.m_vertices) {
 				m_vertices[t] = std::make_unique<Vertex>(t, this);
 			}
 			m_edges.reserve(other.m_edges.size());
-			for(auto &[vertex, edge] : other.m_edges) {
-				auto& v1 = this->m_edges[**vertex];
-				auto& v2 = this->m_edges[**(edge.target())];
-				m_edges.emplace(v1, {v2, edge.weight()});
+			for(auto &[vertex, edges] : other.m_edges) {
+				auto v1 = this->m_vertices[**vertex].get();
+				m_edges[v1] = {};
+				for(auto& edge : edges) {
+					auto v2 = this->m_vertices[**(edge.target())].get();
+					m_edges[v1].emplace_back(v2, edge.weight());
+				}
 			}
-			return *this;
 		}
 
 		Graph& operator=(Graph&& other) {
@@ -569,6 +572,7 @@ namespace firenoo {
 			for(auto it = other.m_edges.begin(); it != other.m_edges.end();/**/) {
 				m_edges.insert(std::move(other.m_edges.extract(it++)));
 			}
+			return *this;
 		}
 
 	};
