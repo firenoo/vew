@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iostream>
 #include "digraph.hpp"
+#include "search.hpp"
 #define _FN_ENABLE_DIRECTED_PRESETS
 #include "presets.hpp"
 // #include "search.hpp"
@@ -442,10 +443,109 @@ namespace test {
 		std::printf("Success\n---------------------------------\n");
 	}
 
+	void testSuite3() {
+		std::printf("DFS Tests\n");
+		simpleDFSTest();
+		fullDFSTest();
+		std::printf("DFS Tests Successful.\n-----------------------\n");
+	}
+
+	void simpleDFSTest() {
+		std::printf("Simple DFS Test\n");
+		const std::size_t LENGTH = 5;
+		const double WEIGHT = 1.0;
+		//PATH
+		std::printf("Path:\n");
+		DirectedGraph<int> path1 = directed::makePath(LENGTH, WEIGHT);
+		auto resultPath1 = simpleDFS(path1);
+		assert(resultPath1.size() == 1);
+		for(auto& it : resultPath1) {
+			for(auto& v : it) {
+				std::printf("%d ", **v);
+			}
+			std::printf("\n");
+		}
+		auto resultPath2 = simpleDFS(path1, {0});
+		assert(resultPath2.size() == 1);
+		for(auto& it : resultPath2) {
+			for(auto& v : it) {
+				std::printf("%d ", **v);
+			}
+			std::printf("\n");
+		}
+		
+		//CHAIN
+		std::printf("Chain:\n");
+		DirectedGraph<int> chain1 = directed::makeChain(LENGTH, WEIGHT);
+		auto resultChain1 = simpleDFS(chain1);
+		assert(resultChain1.size() == 1);
+		for(auto& it : resultChain1) {
+			for(auto& v : it) {
+				std::printf("%d ", **v);
+			}
+			std::printf("\n");
+		}
+		auto resultChain2 = simpleDFS(chain1, {5});
+		assert(resultChain2.size() == 1);
+		for(auto& it : resultChain2) {
+			for(auto& v : it) {
+				std::printf("%d ", **v);
+			}
+			std::printf("\n");
+		}
+		std::printf("Success\n---------------------------------\n");
+	}
+
+	void fullDFSTest() {
+		std::printf("Full DFS Test\n");
+		const std::size_t LENGTH = 5;
+		const double WEIGHT = 1.0;
+		//PATH
+		std::printf("Path:\n");
+		DirectedGraph<int> path1 = directed::makePath(LENGTH, WEIGHT);
+		auto resultPath1 = fullDFS(path1);
+		assert(resultPath1.size() == 1);
+		for(auto& it : resultPath1) {
+			for(auto& v : it) {
+				std::printf("{%lu, %lu | %d} ", std::get<0>(v), std::get<1>(v), **std::get<2>(v));
+			}
+			std::printf("\n");
+		}
+		auto resultPath2 = fullDFS(path1, {0});
+		assert(resultPath2.size() == 1);
+		for(auto& it : resultPath2) {
+			for(auto& v : it) {
+				std::printf("{%lu, %lu | %d} ", std::get<0>(v), std::get<1>(v), **std::get<2>(v));
+			}
+			std::printf("\n");
+		}
+		
+		//CHAIN
+		std::printf("Chain:\n");
+		DirectedGraph<int> chain1 = directed::makeChain(2, WEIGHT);
+		auto resultChain1 = fullDFS(chain1);
+		assert(resultChain1.size() == 1);
+		for(auto& it : resultChain1) {
+			for(auto& v : it) {
+				std::printf("{%lu, %lu | %d} ", std::get<0>(v), std::get<1>(v), **std::get<2>(v));
+			}
+			std::printf("\n");
+		}
+		auto resultChain2 = fullDFS(chain1, {0});
+		assert(resultChain2.size() == 1);
+		for(auto& it : resultChain2) {
+			for(auto& v : it) {
+				std::printf("{%lu, %lu | %d} ", std::get<0>(v), std::get<1>(v), **std::get<2>(v));
+			}
+			std::printf("\n");
+		}
+		std::printf("Success\n---------------------------------\n");
+	}
 }
 
 }
 int main() {
 	firenoo::test::testSuite1();
 	firenoo::test::testSuite2();
+	firenoo::test::testSuite3();
 }

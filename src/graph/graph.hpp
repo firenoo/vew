@@ -539,11 +539,11 @@ namespace firenoo {
 			m_edgeCount = 0;
 		}
 
-		auto begin() {
+		auto begin() const {
 			return m_vertices.cbegin();
 		}
 
-		auto end() {
+		auto end() const {
 			return m_vertices.cend();
 		}
 

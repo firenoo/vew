@@ -79,7 +79,7 @@ namespace firenoo {
 	 */ 
 	template<class T, class W, class Hash, class KeyEq>
 	std::vector<std::vector<typename DGraph::Vertex*>> 
-	simpleDFS(const DGraph& g, std::initializer_list<typename DGraph::Vertex*> args);
+	simpleDFS(const DGraph& g, std::initializer_list<T> args);
 
 	/*
 	 * Perform depth-first search, retaining information about 
@@ -118,8 +118,8 @@ namespace firenoo {
 	 *  - A std::vector, each element being a vector
 	 */ 
 	template<class T, class W, class Hash, class KeyEq>
-	std::vector<std::tuple<std::size_t, std::size_t, typename DGraph::Vertex*>> 
-	fullDFS(const DGraph& g, std::initializer_list<typename DGraph::Vertex*> args);
+	std::vector<std::vector<std::tuple<std::size_t, std::size_t, typename DGraph::Vertex*>>> 
+	fullDFS(const DGraph& g, std::initializer_list<T> args); 
 
 	/*
 	 * Finds whether there is a cycle in the graph.
@@ -181,6 +181,14 @@ namespace firenoo {
 
 // Directed Graphs
 
+namespace {
+
+	struct DFSResult {
+		std::size_t m_id, m_pre, m_post;
+		bool m_visited, m_expanded;
+	};
+
+}
 	/* 
 	 * Helper function. Executes DFS with the element contained in `work_stack`.
 	 * Calling this function with more than one element in the provided stack
@@ -192,24 +200,26 @@ namespace firenoo {
 		DisjointSet& set,
 		std::unordered_map<typename DGraph::Vertex*, std::size_t>& master_map
 	) {
-		using Vertex = DGraph::Vertex;
+		using V = typename DirectedGraph<T, W, Hash, KeyEq>::Vertex;
 		//DFS search loop
 		while(!work_stack.empty()) {
-			Vertex* vertex = work_stack.top();
+			V* vertex = work_stack.top();
 			work_stack.pop();
 			std::size_t ind = master_map[vertex];
 			//Iterate through neighbors
-			for(auto it : **vertex) {
+			for(auto it : *vertex) {
 				//Look if neighbor was already visited
-				size_t it_ind = master_map[it->first];
+				std::size_t it_ind = master_map[it.target()];
 				//Try to add the neighbor vertex to the visit list, if it isn't
 				//already visited. If it hasn't been visited, add it to the
 				//stack so we can expand it later.
 				//A node is unvisited if we can merge with the current set and
-				//is a singleton component.
-				if(set[set.find(it_ind)].rank() == 0 && set.merge(it_ind, ind)) {
+				//is a singleton component. 
+				bool isSingleton = set[set.find(it_ind)].rank() == 0;
+				bool merged = set.merge(it_ind, ind);
+				if(isSingleton && merged) {
 					//Neighbor not already visited.
-					work_stack.push(it->first);
+					work_stack.push(it.target());
 				}
 			}
 		}
@@ -223,137 +233,177 @@ namespace firenoo {
 
 	template<class T, class W, class Hash, class KeyEq>
 	std::vector<std::vector<typename DGraph::Vertex*>> 
-	simpleDFS(const DGraph& g, std::initializer_list<typename DGraph::Vertex*>& args) {
-		using Vertex = typename DGraph::Vertex;
-		std::vector<std::vector<Vertex*>> result;
+	simpleDFS(const DGraph& g, std::initializer_list<T> args) {
+		using V = typename DGraph::Vertex;
+		std::vector<std::vector<V*>> result;
 		if(g.vertexCount() == 0) {
 			return result;
 		}
 		//Initialization
 		result.reserve(g.vertexCount());
 		DisjointSet work_set(g.vertexCount());
-		std::stack<Vertex*> work_stack;
-		std::unordered_map<Vertex*, std::size_t> master_map;
+		std::stack<V*> work_stack;
+		std::unordered_map<V*, std::size_t> master_map;
 		master_map.reserve(g.vertexCount());
 		std::size_t i = 0;
-		for(auto& const it : g) {
-			master_map[it->second] = i; //fill out map
+		
+		for(auto const& it : g) {
+			master_map[it.second.get()] = i; //fill out map
 			++i;
 		}
 		//Handle arguments
-		if(args.size() > 0) {
-			for(Vertex* v : args) {
-				std::size_t v_ind = master_map[v];
-				if(work_set.find(v_ind) == v_ind && work_set[v_ind].rank() == 0u) {
-					work_stack.push(v);
-					dSimpleExplore(work_stack, work_set, master_map);
-				}
+		for(auto& v : args) {
+			std::size_t v_ind = master_map[g.m_vertices.at(v).get()];
+			if(work_set.find(v_ind) == v_ind && work_set[v_ind].rank() == 0u) {
+				work_stack.push(g.m_vertices.at(v).get());
+				dSimpleExplore<T, W, Hash, KeyEq>(work_stack, work_set, master_map);
 			}
 		}
 		//Handle the rest
-		for(auto& it : g) {
-			Vertex* vert = it->second; //top-level vertex
+		for(auto const& it : g) {
+			V* vert = it.second.get(); //top-level vertex
 			std::size_t v_ind = master_map[vert];
 			if(work_set.find(v_ind) == v_ind && work_set[v_ind].rank() == 0u) {
 				//Start a new DFS tree
 				work_stack.push(vert);
-				dSimpleExplore(work_stack, work_set, master_map);
+				dSimpleExplore<T, W, Hash, KeyEq>(work_stack, work_set, master_map);
 			}
 		}
 		//Construct the result from the disjoint set
 		std::unordered_map<size_t, size_t> component_map;
 		component_map.reserve(g.vertexCount());
 		result.reserve(g.vertexCount());
-		size_t ctr = 0;
-		for(auto pair : master_map) {
-			size_t ind = work_set.find(pair.second);
+		std::size_t ctr = 0;
+		for(auto& pair : master_map) {
+			std::size_t ind = work_set.find(pair.second);
 			if(component_map.find(ind) == component_map.end()) {
 				component_map[ind] = ctr++;
-				result.push_back(new DComponent());
+				result.emplace_back();
 			}
-			result[component_map[ind]]->insert(pair.first);
+			result[component_map[ind]].push_back(pair.first);
+		}
+		for(auto& r : result) {
+			r.shrink_to_fit();
 		}
 		result.shrink_to_fit();
 		return result;
 	}
-/*
+
 
 	template<class T, class W, class Hash, class KeyEq>
 	static void dFullExplore(
 		std::stack<typename DGraph::Vertex*>& work_stack,
 		DisjointSet& set,
-		std::unordered_map<typename DGraph::Vertex*, size_t>& master_map,
+		std::unordered_map<typename DGraph::Vertex*, DFSResult>& master_map,
 		size_t& order
 	) {
-		using Vertex = typename DGraph::Vertex;
+		using V = typename DGraph::Vertex;
 		while(!work_stack.empty()) {
 			//DFS search loop
-			Vertex info = work_stack.top(); //copy?
-			Vertex* v = info._vertex;
-			// info._pre = order++; //Adjust preorder
+			V* vertex = work_stack.top(); //copy?
 			//Expand node
 			bool bt = true; //pessimistic backtrack flag
-
-			for(auto it = v->neighbors(); it != v->neighborsEnd(); ++it) {
-				if(set.merge(master_map[v], master_map[it->first])) {
-					//Neighbor not already visited, add to stack
-					work_stack.emplace(0, 0, it->first);
-					bt = false;
+			master_map[vertex].m_visited = true;
+			if(!master_map[vertex].m_expanded) {
+				master_map[vertex].m_pre = order++;
+				master_map[vertex].m_expanded = true;
+				for(auto& neighbor : *vertex) {
+					bool isMerged = set.merge(
+						master_map[vertex].m_id, 
+						master_map[neighbor.target()].m_id
+					);
+					if(!master_map[neighbor.target()].m_visited && isMerged) {
+						//Neighbor not already visited, add to stack
+						work_stack.push(neighbor.target());
+						//Keep only 1 instance in the stack
+						master_map[neighbor.target()].m_visited = true;
+						bt = false;
+					}
 				}
 			}
 			if(bt) {
 				//There were no options, backtrack
-				info._post = order++;
+				master_map[vertex].m_post = order++;
 				work_stack.pop();
-			} else {
-				info._pre = order++;
 			}
 		}
 
 	}
-template<class T, class W>
-std::vector<DFullComp*> fullDFS(const DGraph& g, std::initializer_list<DVertex*> args) {
-	std::vector<DFullComp*> result;
-	if(g.vertexCount() == 0) {
+
+	template<class T, class W, class Hash, class KeyEq>
+	std::vector<std::vector<std::tuple<std::size_t, std::size_t, typename DGraph::Vertex*>>> 
+	fullDFS(const DGraph& g) {
+		return fullDFS(g, {});
+	}
+
+	template<class T, class W, class Hash, class KeyEq>
+	std::vector<std::vector<std::tuple<std::size_t, std::size_t, typename DGraph::Vertex*>>> 
+	fullDFS(const DGraph& g, std::initializer_list<T> args) {
+		using V = typename DGraph::Vertex;
+		std::vector<std::vector<std::tuple<std::size_t, std::size_t, V*>>> result;
+		if(g.vertexCount() == 0) {
+			return result;
+		}
+		size_t order = 0;
+		//data structures
+		std::stack<V*> work_stack;
+		DisjointSet work_set(g.vertexCount());
+		std::unordered_map<V*, DFSResult> master_map;
+		//reserve size
+		result.reserve(g.vertexCount());
+		master_map.reserve(g.vertexCount());
+		//initialize master map
+		size_t i = 0;
+		for(auto it = g.begin(); it != g.end(); ++it) {
+			master_map[it->second.get()] = {i, 0, 0, false, false};
+			++i;
+		}
+		//priority order first
+		for(auto& v : args) {
+			V* vert = g.m_vertices.at(v).get(); //top-level vertex
+			if(!master_map[vert].m_visited) {
+				work_stack.push(vert);
+				dFullExplore<T, W, Hash, KeyEq>(work_stack, work_set, master_map, order);
+			}
+		}
+
+		//remaining vertices
+		for(auto& it : g) {
+			//Main loop
+			V* vert = it.second.get(); //top-level vertex
+			if(!master_map[vert].m_visited) {
+				work_stack.push(vert);
+				dFullExplore<T, W, Hash, KeyEq>(work_stack, work_set, master_map, order);
+			}
+		}
+		//Construct result
+
+		//Construct the result from the disjoint set
+		std::unordered_map<size_t, size_t> component_map;
+		component_map.reserve(g.vertexCount());
+		result.reserve(g.vertexCount());
+		std::size_t ctr = 0;
+		for(auto& [vertex, dfsResult] : master_map) {
+			std::size_t ind = work_set.find(dfsResult.m_id);
+			if(component_map.find(ind) == component_map.end()) {
+				component_map[ind] = ctr++;
+				result.emplace_back();
+			}
+			result[component_map[ind]].emplace_back(
+				dfsResult.m_pre,
+				dfsResult.m_post,
+				vertex
+			);
+		}
+		for(auto& r : result) {
+			r.shrink_to_fit();
+		}
+
+		result.shrink_to_fit();
 		return result;
 	}
-	size_t order = 0;
-	//data structures
-	std::stack<DDFSResult> work_stack;
-	DisjointSet work_set(g.vertexCount());
-	std::unordered_set<DVertex*> visited;
-	std::unordered_map<DVertex*, size_t> master_map;
-	//reserve size
-	visited.reserve(g.vertexCount());
-	result.reserve(g.vertexCount());
-	master_map.reserve(g.vertexCount());
-	//initialize master map
-	size_t i = 0;
-	for(auto it = g.begin(); it != g.end(); ++it) {
-		master_map[it->second] = i;
-		++i;
-	}
-	//priority order first
-	if(args.size() > 0) {
-		for(DVertex* v : args) {
-			work_stack.emplace(0, 0, v);
-		}
-		dfs_explore_full(work_stack, work_set, master_map, visited, order);
-	}
-	//remaining vertices
-	for(auto iter = g.begin(); iter != g.end(); ++iter) {
-		//Main loop
-		DVertex* vert = iter->second; //top-level vertex
-		if(visited.find(vert) == visited.end()) {
-			//Start a new DFS tree
-			work_stack.emplace(order, 0, vert);
-			dfs_explore_full(work_stack, work_set, master_map, visited, order);
-		}
-	}
-	result.shrink_to_fit();
-	return result;
-}
 
+/*
 template<class T, class W>
 static bool dfs_explore_cycle(std::stack<DVertex*>& work_stack, std::unordered_set<DVertex*>& visited) {
 	while(!work_stack.empty()) {

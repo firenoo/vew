@@ -71,4 +71,13 @@ DisjointSet::Node& DisjointSet::Node::operator=(const Node& other) noexcept {
 	}
 	return *this;
 }
+
+std::size_t DisjointSet::Node::rank() noexcept {
+	return m_rank;
+}
+
+std::size_t DisjointSet::Node::parent() noexcept {
+	return m_parent;
+}
+
 }

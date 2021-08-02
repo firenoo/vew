@@ -1,8 +1,7 @@
 #ifndef _FN_PRESETS
 	#define _FN_PRESETS 
-	#include "../graph/udigraph.hpp"
-	#include "../graph/digraph.hpp"
-
+	#include "digraph.hpp"
+	#include "udigraph.hpp"
 /*
  * Presets
  * The functions in this file construct predefined graphs.
@@ -10,7 +9,6 @@
 namespace firenoo {
 
 #ifdef _FN_ENABLE_UNDIRECTED_PRESETS
-
 	namespace undirected {
 
 		/*
@@ -201,7 +199,6 @@ namespace firenoo {
 		}
 	}
 #endif
-#define _FN_ENABLE_DIRECTED_PRESETS
 #ifdef _FN_ENABLE_DIRECTED_PRESETS
 	namespace directed {
 

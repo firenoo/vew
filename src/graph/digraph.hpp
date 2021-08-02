@@ -3,6 +3,7 @@
 	#include <memory>
 	#include <unordered_set>
 	#include <stack>
+	#include <tuple>
 	#include "graph.hpp"
 /*
  * Author: firenoo
@@ -30,13 +31,23 @@ namespace firenoo {
 		class KeyEq = std::equal_to<T>,
 		typename std::enable_if<std::is_arithmetic<W>::value, bool>::type = true
 	> class DirectedGraph : public Graph<T, W, Hash, KeyEq> {
-	private:
+	public:
 		#define Graph Graph<T, W, Hash, KeyEq> 
 		using Vertex = typename Graph::Vertex;
 		using Edge = typename Graph::Edge;
+	private:
 		std::unordered_map<Vertex*, std::unordered_set<Vertex*>> m_backedges;
 
 	public:
+		template<class T1, class W1, class Hash1, class KeyEq1>
+		friend std::vector<std::vector<typename DirectedGraph<T1, W1, Hash1, KeyEq1>::Vertex*>> 
+		simpleDFS(const DirectedGraph<T1, W1, Hash1, KeyEq1>& g, std::initializer_list<T1> args);
+
+
+		template<class T1, class W1, class Hash1, class KeyEq1>
+		friend std::vector<std::vector<std::tuple<std::size_t, std::size_t, typename DirectedGraph<T1, W1, Hash1, KeyEq1>::Vertex*>>> 
+		fullDFS(const DirectedGraph<T1, W1, Hash1, KeyEq1>& g, std::initializer_list<T1> args);
+
 		/*
 		* Default constructor. Creates an empty graph with no vertices or edges.
 		*/
