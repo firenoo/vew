@@ -27,6 +27,8 @@ namespace test {
 	void testSuite3();
 	void simpleDFSTest();
 	void fullDFSTest();
+	void cycleTest();
+	void topSortTest();
 
 	void digraph1() {
 		std::printf("Test 1\n");
@@ -447,6 +449,8 @@ namespace test {
 		std::printf("DFS Tests\n");
 		simpleDFSTest();
 		fullDFSTest();
+		cycleTest();
+		topSortTest();
 		std::printf("DFS Tests Successful.\n-----------------------\n");
 	}
 
@@ -456,8 +460,8 @@ namespace test {
 		const double WEIGHT = 1.0;
 		//PATH
 		std::printf("Path:\n");
-		DirectedGraph<int> path1 = directed::makePath(LENGTH, WEIGHT);
-		auto resultPath1 = simpleDFS(path1);
+		DirectedGraph<int> path = directed::makePath(LENGTH, WEIGHT);
+		auto resultPath1 = simpleDFS(path);
 		assert(resultPath1.size() == 1);
 		for(auto& it : resultPath1) {
 			for(auto& v : it) {
@@ -465,7 +469,7 @@ namespace test {
 			}
 			std::printf("\n");
 		}
-		auto resultPath2 = simpleDFS(path1, {0});
+		auto resultPath2 = simpleDFS(path, {0});
 		assert(resultPath2.size() == 1);
 		for(auto& it : resultPath2) {
 			for(auto& v : it) {
@@ -476,8 +480,8 @@ namespace test {
 		
 		//CHAIN
 		std::printf("Chain:\n");
-		DirectedGraph<int> chain1 = directed::makeChain(LENGTH, WEIGHT);
-		auto resultChain1 = simpleDFS(chain1);
+		DirectedGraph<int> chain = directed::makeChain(LENGTH, WEIGHT);
+		auto resultChain1 = simpleDFS(chain);
 		assert(resultChain1.size() == 1);
 		for(auto& it : resultChain1) {
 			for(auto& v : it) {
@@ -485,9 +489,28 @@ namespace test {
 			}
 			std::printf("\n");
 		}
-		auto resultChain2 = simpleDFS(chain1, {5});
+		auto resultChain2 = simpleDFS(chain, {5});
 		assert(resultChain2.size() == 1);
 		for(auto& it : resultChain2) {
+			for(auto& v : it) {
+				std::printf("%d ", **v);
+			}
+			std::printf("\n");
+		}
+		//CYCLE
+		std::printf("Cycle:\n");
+		DirectedGraph<int> cycle = directed::makeCycle(LENGTH, WEIGHT);
+		auto resultCycle1 = simpleDFS(cycle);
+		assert(resultCycle1.size() == 1);
+		for(auto& it : resultCycle1) {
+			for(auto& v : it) {
+				std::printf("%d ", **v);
+			}
+			std::printf("\n");
+		}
+		auto resultCycle2 = simpleDFS(cycle, {0});
+		assert(resultCycle2.size() == 1);
+		for(auto& it : resultCycle2) {
 			for(auto& v : it) {
 				std::printf("%d ", **v);
 			}
@@ -541,6 +564,35 @@ namespace test {
 		}
 		std::printf("Success\n---------------------------------\n");
 	}
+
+	void cycleTest() {
+		std::printf("Cycle Tests\n");
+		const std::size_t LENGTH = 5;
+		const double WEIGHT = 1.0;
+		DirectedGraph<int> cGraph = directed::makeCycle(LENGTH, WEIGHT);
+		assert(hasCycle(cGraph));
+
+		DirectedGraph<int> pGraph = directed::makePath(LENGTH, WEIGHT);
+		assert(!hasCycle(pGraph));
+
+		DirectedGraph<int> kGraph = directed::makeComplete(LENGTH, WEIGHT);
+		assert(hasCycle(kGraph));
+		std::printf("Success\n---------------------------------\n");
+	}
+
+	void topSortTest() {
+		std::printf("Top Sort Tests\n");
+		const std::size_t LENGTH = 5;
+		const double WEIGHT = 1.0;
+		DirectedGraph<int> g = directed::makePath(LENGTH, WEIGHT);
+		auto resultTS = topSort(g);
+		for(auto i : resultTS) {
+			std::printf("%d ", **i);
+		}
+		std::printf("\n");
+		std::printf("Success\n---------------------------------\n");
+	}
+
 }
 
 }

@@ -48,9 +48,17 @@ namespace firenoo {
 		friend std::vector<std::vector<std::tuple<std::size_t, std::size_t, typename DirectedGraph<T1, W1, Hash1, KeyEq1>::Vertex*>>> 
 		fullDFS(const DirectedGraph<T1, W1, Hash1, KeyEq1>& g, std::initializer_list<T1> args);
 
+
+		template<class T1, class W1, class Hash1, class KeyEq1>
+		friend bool hasCycle(const DirectedGraph<T1, W1, Hash1, KeyEq1>& g, std::initializer_list<T1> args);
+		
+		template<class T1, class W1, class Hash1, class KeyEq1>
+		friend std::vector<typename DirectedGraph<T1, W1, Hash1, KeyEq1>::Vertex*> 
+		topSort(const DirectedGraph<T1, W1, Hash1, KeyEq1>& g, std::initializer_list<T1> args);
+
 		/*
-		* Default constructor. Creates an empty graph with no vertices or edges.
-		*/
+		 * Default constructor. Creates an empty graph with no vertices or edges.
+		 */
 		DirectedGraph() : Graph() {}
 
 		//Copy		

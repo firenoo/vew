@@ -12,33 +12,6 @@
 
 namespace firenoo {
 
-	/*
-	 * DFSPostCompare - Comparator for sorting post numbers
-	 * V - vertex type
-	 * Reverse - whether to sort from smallest to largest (false) or vice versa
-	 * (true)
-	 */
-	template <class GraphVertex, bool Reverse = false>
-	struct DFSPostCompare {};
-
-	template <class GraphVertex>
-	struct DFSPostCompare<GraphVertex, true> {
-		bool operator()(
-			std::tuple<std::size_t, std::size_t, GraphVertex>& a, 
-			std::tuple<std::size_t, std::size_t, GraphVertex>& b) noexcept {
-			return std::get<1>(a) > std::get<1>(b);
-		}
-	};
-
-	template <class GraphVertex>
-	struct DFSPostCompare<GraphVertex, false> {
-		bool operator()(
-			std::tuple<std::size_t, std::size_t, GraphVertex>& a, 
-			std::tuple<std::size_t, std::size_t, GraphVertex>& b) noexcept {
-			return std::get<1>(a) < std::get<1>(b);
-		}
-	};
-
 //-----------------------------------------------------------------------------
 // Directed Graph operations
 //-----------------------------------------------------------------------------
@@ -124,6 +97,10 @@ namespace firenoo {
 	/*
 	 * Finds whether there is a cycle in the graph.
 	 *
+	 * Passing in vertices will suggest the order to run the search in.
+	 * Invalid vertices (e.g. vertices that don't belong to the graph) are
+	 * ignored/skipped, and remaining vertices are run in arbitrary order.
+	 * 
 	 * READ operation.
 	 * Parameters:
 	 *  - g : A DirectedGraph instance (weighted, directed graph)
@@ -134,7 +111,67 @@ namespace firenoo {
 	bool hasCycle(const DGraph& g);
 
 	/*
+	 * Finds whether there is a cycle in the graph.
+	 *
+	 * Passing in vertices will suggest the order to run the search in.
+	 * Invalid vertices (e.g. vertices that don't belong to the graph) are
+	 * ignored/skipped, and remaining vertices are run in arbitrary order.
+	 * 
+	 * READ operation.
+	 * Parameters:
+	 *  - g : A DirectedGraph instance (weighted, directed graph)
+	 * Returns:
+	 *  - true if and only if there exists a cycle in the graph
+	 */
+	template<class T, class W, class Hash, class KeyEq>
+	bool hasCycle(const DGraph& g, std::initializer_list<T> args);
+	
+	/*
+	 * Finds the vertices that are parts of a cycle.
+	 * Vertices found may be part of multiple cycles, and will be included in
+	 * multiple `std::vector`'s as expected.
+	 * 
+	 * Passing in vertices will suggest the order to run the search in.
+	 * Invalid vertices (e.g. vertices that don't belong to the graph) are
+	 * ignored/skipped, and remaining vertices are run in arbitrary order.
+	 * 
+	 * READ operation.
+	 * Parameters:
+	 *  - g : A DirectedGraph instance
+	 * Returns:
+	 *   - A `std::vector` that contains `std::vector`'s, each of which
+	 *     represent a single cycle.
+	 */
+	template<class T, class W, class Hash, class KeyEq>
+	std::vector<std::vector<typename DGraph::Vertex*>> 
+	findCycles(const DGraph& g);
+
+	/*
+	 * Finds the vertices that are parts of a cycle.
+	 * Vertices found may be part of multiple cycles, and will be included in
+	 * multiple `std::vector`'s as expected.
+	 * 
+	 * Passing in vertices will suggest the order to run the search in.
+	 * Invalid vertices (e.g. vertices that don't belong to the graph) are
+	 * ignored/skipped, and remaining vertices are run in arbitrary order.
+	 * 
+	 * READ operation.
+	 * Parameters:
+	 *  - g : A DirectedGraph instance
+	 * Returns:
+	 *   - A `std::vector` that contains `std::vector`'s, each of which
+	 *     represent a single cycle.
+	 */
+	template<class T, class W, class Hash, class KeyEq>
+	std::vector<std::vector<typename DGraph::Vertex*>> 
+	findCycles(const DGraph& g, std::initializer_list<T> args);
+
+	/*
 	 * Constructs a topological sort of the graph.
+	 * 
+	 * Passing in vertices will suggest the order to run the search in.
+	 * Invalid vertices (e.g. vertices that don't belong to the graph) are
+	 * ignored/skipped, and remaining vertices are run in arbitrary order.
 	 * 
 	 * READ operation.
 	 * Parameters:
@@ -144,6 +181,23 @@ namespace firenoo {
 	 */
 	template<class T, class W, class Hash, class KeyEq>
 	std::vector<typename DGraph::Vertex*> topSort(const DGraph& g);
+
+	/*
+	 * Constructs a topological sort of the graph.
+	 * 
+	 * Passing in vertices will suggest the order to run the search in.
+	 * Invalid vertices (e.g. vertices that don't belong to the graph) are
+	 * ignored/skipped, and remaining vertices are run in arbitrary order.
+	 * 
+	 * READ operation.
+	 * Parameters:
+	 *  - g : A DirectedGraph instance (weighted, directed graph)
+	 * Returns:
+	 *  - a topological sort of the graph
+	 */
+	template<class T, class W, class Hash, class KeyEq>
+	std::vector<typename DGraph::Vertex*> 
+	topSort(const DGraph& g, std::initializer_list<T> args);
 
 //-----------------------------------------------------------------------------
 // Undirected Graphs
@@ -183,11 +237,31 @@ namespace firenoo {
 
 namespace {
 
+	/*
+	 * DFSResult - stores relevant information about dfs, during traversal.
+	 */
 	struct DFSResult {
 		std::size_t m_id, m_pre, m_post;
 		bool m_visited, m_expanded;
 	};
 
+	template<class T, class W, class Hash, class KeyEq>
+	struct PostCompareReverse {
+		bool operator()(
+			const std::pair<typename DGraph::Vertex*, std::size_t>& a,
+			const std::pair<typename DGraph::Vertex*, std::size_t>& b
+		) {
+			return std::get<1>(a) > std::get<1>(b);
+		}
+	};
+
+
+	/*
+	 * CycleResult - stores cycle information 
+	 */
+	struct CycleResult {
+		bool m_expanded, m_visited, m_dead;
+	};
 }
 	/* 
 	 * Helper function. Executes DFS with the element contained in `work_stack`.
@@ -253,6 +327,9 @@ namespace {
 		}
 		//Handle arguments
 		for(auto& v : args) {
+			if(g.m_vertices.find(v) == g.m_vertices.end()) {
+				continue;
+			}
 			std::size_t v_ind = master_map[g.m_vertices.at(v).get()];
 			if(work_set.find(v_ind) == v_ind && work_set[v_ind].rank() == 0u) {
 				work_stack.push(g.m_vertices.at(v).get());
@@ -360,6 +437,9 @@ namespace {
 		}
 		//priority order first
 		for(auto& v : args) {
+			if(g.m_vertices.find(v) == g.m_vertices.end()) {
+				continue;
+			}
 			V* vert = g.m_vertices.at(v).get(); //top-level vertex
 			if(!master_map[vert].m_visited) {
 				work_stack.push(vert);
@@ -403,68 +483,142 @@ namespace {
 		return result;
 	}
 
+	template<class T, class W, class Hash, class KeyEq>
+	static bool dHasCycle(
+		std::stack<typename DGraph::Vertex*>& work_stack,
+		std::unordered_map<typename DGraph::Vertex*, CycleResult>& master_map
+	) {
+		using V = typename DGraph::Vertex;
+		while(!work_stack.empty()) {
+			//DFS search loop
+			V* vertex = work_stack.top(); //copy?
+			//Expand node
+			bool bt = true; //pessimistic backtrack flag
+			master_map[vertex].m_visited = true;
+			if(!master_map[vertex].m_expanded) {
+				master_map[vertex].m_expanded = true;
+				for(auto& neighbor : *vertex) {
+					if(!master_map[neighbor.target()].m_dead) {
+						//Found a cycle!
+						return true;
+					} else if(!master_map[neighbor.target()].m_visited) {
+						//Neighbor not already visited, add to stack
+						work_stack.push(neighbor.target());
+						//Keep only 1 instance in the stack
+						master_map[neighbor.target()].m_visited = true;
+						bt = false;
+					}
+				}
+			}
+			if(bt) {
+				//There were no options, backtrack
+				master_map[vertex].m_dead = true;
+				work_stack.pop();
+			}
+		}
+		return false;
+	}
+
+	template<class T, class W, class Hash, class KeyEq>
+	bool hasCycle(const DGraph& g) {
+		return hasCycle(g, {});
+	}
+
+	template<class T, class W, class Hash, class KeyEq>
+	bool hasCycle(const DGraph& g, std::initializer_list<T> args) {
+		using V = typename DGraph::Vertex;
+		//Strategy: perform dfs from all vertices; if we encounter a vertex
+		//that we visited already, we found a cycle
+		std::stack<V*> work_stack;
+		std::unordered_map<V*, CycleResult> master_map;
+		
+		master_map.reserve(g.vertexCount());
+
+		for(auto& [obj, v] : g) {
+			master_map[v.get()] = {false, false, false};
+		}
+		for(auto& v : args) {
+			if(g.m_vertices.find(v) == g.m_vertices.end()) {
+				continue;
+			}
+			if(!master_map[g.m_vertices.at(v).get()].m_visited) {
+				work_stack.push(g.m_vertices.at(v).get());
+				if(dHasCycle<T, W, Hash, KeyEq>(work_stack, master_map)) {
+					return true;
+				}
+			}
+			//run dfs
+		}
+		for(auto& [obj, v] : g) {
+			//run dfs
+			if(!master_map[v.get()].m_visited) {
+				work_stack.push(v.get());
+				if(dHasCycle<T, W, Hash, KeyEq>(work_stack, master_map)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	template<class T, class W, class Hash, class KeyEq>
+	std::vector<typename DGraph::Vertex*> topSort(const DGraph& g) {
+		return topSort(g, {});
+	}
+	
+	template<class T, class W, class Hash, class KeyEq>
+	std::vector<typename DGraph::Vertex*> topSort(const DGraph& g, std::initializer_list<T> args) {
+		using V = typename DGraph::Vertex;
+		std::vector<V*> result; 
+		//If there's a cycle, return empty.
+		if(g.vertexCount() == 0 || hasCycle(g, args)) {
+			return result;
+		}
+		DisjointSet work_set(g.vertexCount());	
+		std::stack<V*> work_stack;
+		std::unordered_map<V*, DFSResult> master_map;
+		std::size_t order = 0;
+		master_map.reserve(g.vertexCount());
+		result.reserve(g.vertexCount());
+
+		size_t i = 0;
+		for(auto it = g.begin(); it != g.end(); ++it) {
+			master_map[it->second.get()] = {i, 0, 0, false, false};
+			++i;
+		}
+		//priority order first
+		for(auto& v : args) {
+			if(g.m_vertices.find(v) == g.m_vertices.end()) {
+				continue;
+			}
+			V* vert = g.m_vertices.at(v).get(); //top-level vertex
+			if(!master_map[vert].m_visited) {
+				work_stack.push(vert);
+				dFullExplore<T, W, Hash, KeyEq>(work_stack, work_set, master_map, order);
+			}
+		}
+
+		//remaining vertices
+		for(auto& it : g) {
+			//Main loop
+			V* vert = it.second.get(); //top-level vertex
+			if(!master_map[vert].m_visited) {
+				work_stack.push(vert);
+				dFullExplore<T, W, Hash, KeyEq>(work_stack, work_set, master_map, order);
+			}
+		}
+		//Construct result with a temporary vector
+		std::vector<std::pair<V*, std::size_t>> temp_result;
+		for(auto& [vertex, entry] : master_map) {
+			temp_result.emplace_back(vertex, entry.m_post);
+		}
+		std::sort(temp_result.begin(), temp_result.end(), PostCompareReverse<T, W, Hash, KeyEq>());
+		for(auto& r : temp_result) {
+			result.push_back(std::get<0>(r));
+		}
+		return result;
+	}
 /*
-template<class T, class W>
-static bool dfs_explore_cycle(std::stack<DVertex*>& work_stack, std::unordered_set<DVertex*>& visited) {
-	while(!work_stack.empty()) {
-		//DFS search loop
-		DVertex* vertex = work_stack.top();
-		work_stack.pop();
-		if(visited.find(vertex) != visited.end()) continue;
-		visited.insert(vertex); //Mark as visited
-		//Iterate through neighbors
-		auto n = vertex->neighbors();
-		while(n != vertex->neighborsEnd()) {
-			//Look if neighbor was already visited
-			if(visited.find(n->first) == visited.end()) {
-				//Expand neighbor
-				work_stack.push(n->first);
-			} else {
-				//Found a cycle
-				return true;
-			}
-			++n;
-		}
-	}
-	return false;
-}
-
-template<class T, class W>
-bool has_cycle(const DGraph& g) {
-	//Strategy: perform dfs from all vertices; if we encounter a vertex
-	//that we visited already, we found a cycle
-	std::stack<DVertex*> work_stack;
-	std::unordered_set<DVertex*> visited;
-	auto iter = g.begin();
-	while(iter != g.end()) {
-		if(visited.find(iter->second) == visited.end()) {
-			work_stack.push(iter->second);
-			if(dfs_explore_cycle(work_stack, visited)) {
-				return true;
-			}
-		}
-		++iter;
-	}
-	return false;
-}
-
-template<class T, class W>
-std::vector<DDFSResult> top_sort(const DGraph& g) {
-	std::vector<DDFSResult> result;
-	result.reserve(g.vertexCount());
-	std::vector<DFullComp*> dfs_result = dfs_full(g, {});
-	for(DFullComp* c : dfs_result) {
-		for(auto iter = c->begin(); iter != c->end(); ++iter) {
-			//move all values from the unordered_set to vector
-			result.push_back(std::move(c->extract(iter).value()));
-		}
-	}
-	//Sort by post-order
-	DFSPostCompare<DVertex, true> cmp;
-	std::sort(result.begin(), result.end(), cmp);
-	return result;
-}
-
 
 //-----------------------------------------------------------------------------
 // Undirected Graphs
